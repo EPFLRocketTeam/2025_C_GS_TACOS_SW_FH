@@ -65,12 +65,7 @@ void GSE::telemetry_downlink() {
     actuators_t positions = actuators->get_all();
 
     // TODO populate downlink packet
-    gse_downlink_t packet = {
-        .tankPressure = measurements.ptes[SENSOR_1],
-	    .tankTemperature = measurements.ptes[SENSOR_1],
-	    .fillingPressure = measurements.ptes[SENSOR_1],
-	    .disconnectActive = (positions.servos[SERVO_1] == SERVO_OPEN),
-    };
+    gse_downlink_t packet = {};
     
     uint8_t* stream = new uint8_t[gse_downlink_size];
     memcpy(stream, &packet, gse_downlink_size);

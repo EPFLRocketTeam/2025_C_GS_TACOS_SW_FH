@@ -1,7 +1,7 @@
 [submodule "lib/ERT_RF_Protocol_Interface"]
 	path = lib/ERT_RF_Protocol_Interface
 	url = https://github.com/EPFLRocketTeam/ERT_RF_Protocol_Interface.git
-	branch = firehorn_gse
+	branch = firehorn
 	
 [submodule "lib/2024_C_AV-GS_CAPSULE"]
 	path = lib/2024_C_AV-GS_CAPSULE
