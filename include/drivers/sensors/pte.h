@@ -5,6 +5,7 @@
 #include <Wire.h>
 #include <cppQueue.h>
 
+// TODO change this
 #define PTE_I2C_ID 0x00
 #define PTE_SAMPLES_CALIB_BUFFER 100
 

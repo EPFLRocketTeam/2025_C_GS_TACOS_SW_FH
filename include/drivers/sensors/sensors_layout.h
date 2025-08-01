@@ -1,8 +1,6 @@
 #ifndef SENSORS_LAYOUT_H
 #define SENSORS_LAYOUT_H
 
-#include "pte.h"
-
 #ifdef HARDWARE_LAYOUT_FIREHORN
 #include "sensors_layout_fh.h"
 #endif
