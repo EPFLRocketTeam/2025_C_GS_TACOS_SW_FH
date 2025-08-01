@@ -4,27 +4,20 @@
 #include "pte.h"
 
 #ifdef HARDWARE_LAYOUT_FIREHORN
+#include "sensors_layout_fh.h"
+#endif
 
-enum sensors_aliases_t {
-    SENSOR_1 = 0,
-    SENSOR_2 = 1,
-    SENSOR_3 = 2,
-    SENSOR_4 = 3,
-    SENSOR_5 = 4,
-    SENSOR_6 = 5,
+enum ptes_alias_t {
+#define DEF(alias, channel, id, min_time) alias,
+    PTES_LIST
+#undef DEF
+    PTES_AMOUNT
 };
 
 constexpr pte_config_t PTES_CONFIG[] = {
-    {&Wire, 0, 10},
-    {&Wire, 1, 10},
-    {&Wire, 2, 10},
-    {&Wire, 3, 10},
-    {&Wire, 4, 10},
-    {&Wire2, 0, 10},
-    {&Wire2, 1, 10},
+#define DEF(alias, channel, id, min_time) {&channel, id, min_time},
+    PTES_LIST
+#undef DEF
 };
 
-constexpr size_t PTES_AMOUNT = sizeof(PTES_CONFIG) / sizeof(pte_config_t);
-
-#endif
 #endif // SENSORS_LAYOUT_H
