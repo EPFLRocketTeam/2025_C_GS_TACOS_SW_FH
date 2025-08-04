@@ -13,6 +13,7 @@ void ToggleActuator::calibrate() {
 void ToggleActuator::write(const uint8_t _position) {
     position = _position;
     digitalWrite(pin, _position^type);
+    delay(TOGGLE_ACT_DELAY_MS);
 }
 
 uint8_t ToggleActuator::get() {

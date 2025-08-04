@@ -9,6 +9,8 @@
 #define TOGGLE_NC 0
 #define TOGGLE_NO 1
 
+#define TOGGLE_ACT_DELAY_MS 100
+
 typedef struct toggle_config_t {
     uint8_t pin;
     uint8_t type;
