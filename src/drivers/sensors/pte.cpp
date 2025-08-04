@@ -2,19 +2,50 @@
 
 void PTESensor::init(const pte_config_t& config) {
     i2c_channel = config.i2c_channel;
+    mux_instance = config.mux_instance;
     i2c_mux_id = config.i2c_mux_id;
     min_time = config.min_time;
 
     i2c_channel->begin();
     sample_calib_buffer.flush();
+
+    // Reset MUX
+    digitalWrite(PTE_MUX_RST, LOW);
+    delay(2); // Hold reset low for at least 1 ms
+    digitalWrite(PTE_MUX_RST, HIGH);
+
+    // Start MUX
+    mux_instance->begin(); 
+}
+
+float rawToBar(int16_t rawPressure) {
+  // Linear interpolation
+  return ((rawPressure - (-16000.0)) * (100.0) / (16000.0 - (-16000.0)));
 }
 
 void PTESensor::tick() {
-    if(millis() - last_sample > min_time) {
-        last_sample = millis();
-        // TODO read from I2C into sample
+    if(millis() - last_valid_sample < min_time)
+        return;
+
+    mux_instance->selectChannel(i2c_mux_id);
+    
+    i2c_channel->beginTransmission(PTE_I2C_ID);
+    i2c_channel->write(PTE_RAM_ADDR_S);
+    i2c_channel->endTransmission(false);
+    i2c_channel->requestFrom(PTE_I2C_ID, 2);
+    
+    if (Wire1.available() >= 2) {
+        uint8_t lowByte = i2c_channel->read();
+        uint8_t highByte = i2c_channel->read();
+        sample = rawToBar((highByte << 8) | lowByte);
+
+        last_valid_sample = millis();
         sample_calib_buffer.push(&sample);
+        return;
     }
+
+    sample = 0;
+
 }
 
 pte_sample_t PTESensor::get() {

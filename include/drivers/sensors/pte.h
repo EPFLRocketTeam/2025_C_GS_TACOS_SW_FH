@@ -4,13 +4,23 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <cppQueue.h>
+#include <TCA9548.h>
 
-// TODO change this
-#define PTE_I2C_ID 0x00
+#define PTE_I2C_ID 0x6C
+#define PTE_RAM_ADDR_S 0x30
+
+#define PTE_MUX_ID 0x70
+#define PTE_MUX_RST 14
+
+
 #define PTE_SAMPLES_CALIB_BUFFER 100
+
+static PCA9546 MUX_0_INSTANCE{PTE_MUX_ID, &Wire};
+static PCA9546 MUX_2_INSTANCE{PTE_MUX_ID, &Wire2};
 
 typedef struct pte_config_t {
     TwoWire* i2c_channel;
+    PCA9546* mux_instance;
     uint8_t i2c_mux_id;
     time_t min_time;
 } pte_config_t;
@@ -19,15 +29,16 @@ typedef float pte_sample_t;
 #define PTE_SAMPLE_SIZE sizeof(pte_sample_t)
 
 class PTESensor {
-private:
+private: 
     TwoWire* i2c_channel;
+    PCA9546* mux_instance;
     uint8_t i2c_mux_id;
     time_t min_time;
     
     float bias = 0;
     float var = 0;
     
-    time_t last_sample = 0;
+    time_t last_valid_sample = 0;
     pte_sample_t sample = 0;
     cppQueue sample_calib_buffer;
 

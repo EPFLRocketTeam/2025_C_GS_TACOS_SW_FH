@@ -6,14 +6,14 @@
 #endif
 
 enum ptes_alias_t {
-#define DEF(alias, channel, id, min_time) alias,
+#define DEF(alias, channel, mux, id, min_time) alias,
     PTES_LIST
 #undef DEF
     PTES_AMOUNT
 };
 
 constexpr pte_config_t PTES_CONFIG[] = {
-#define DEF(alias, channel, id, min_time) {&channel, id, min_time},
+#define DEF(alias, channel, mux, id, min_time) {&channel, &mux, id, min_time},
     PTES_LIST
 #undef DEF
 };
