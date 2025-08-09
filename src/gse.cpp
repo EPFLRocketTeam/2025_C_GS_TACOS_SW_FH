@@ -16,6 +16,7 @@ void GSE::tick() {
 
     // Input collections
     telecom->tick();        // Process & Expose a new command 
+    sensors->tick_all();
     
     //(in, state) -> out
     compute_output();       // Execute output sequences
