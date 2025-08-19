@@ -2,8 +2,14 @@
 #include "gse.h"
 #include "logger.h"
 
+#define NRST_PIN -1
+
 void setup() {
     delay(200);
+
+    pinMode(NRST_PIN, OUTPUT);
+    digitalWrite(NRST_PIN, 1);
+
     DEBUG_SERIAL.begin(DEBUG_SERIAL_BAUD);
     DEBUG_SERIAL.println("[OFFLOG] Serial connection OK");
     DEBUG_SERIAL.println("[OFFLOG] Attempting to connect to SD card");
