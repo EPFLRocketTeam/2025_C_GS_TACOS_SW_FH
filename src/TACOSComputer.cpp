@@ -27,12 +27,22 @@ ToggleActuator TOGGLE_27{{toggle_type::TOGGLE_TYPE_NC, 0}};
 ToggleActuator TOGGLE_28{{toggle_type::TOGGLE_TYPE_NC, 0}};
 
 void TACOSComputer::init() {
+    m_telecom.init();
     soft_reset();
+
 }
 
 void TACOSComputer::check_pte7300_sample(pte7300_reading_t reading, pte7300_sample_t& reg) {
     reg.pressure = reading.pressure_valid ? reading.sample.pressure : reg.pressure;
     reg.temperature = reading.temperature_valid ? reading.sample.temperature : reg.temperature;
+}
+
+void TACOSComputer::process_telecom_command(const gse_uplink_t& packet) {
+    switch (packet.order_id)
+    {
+    default:
+        break;
+    }
 }
 
 void TACOSComputer::update(time_t current) {
@@ -43,6 +53,8 @@ void TACOSComputer::update(time_t current) {
      * 4. update status
      * 5. send downlink
      */
+
+    process_telecom_command(m_telecom.get_last_packet_received(true));
 
     #ifdef SENSORS_POLLING_RATE_MS
     if(current - m_last_sensors_polling > SENSORS_POLLING_RATE_MS) {
@@ -60,6 +72,8 @@ void TACOSComputer::update(time_t current) {
 }
 
 void TACOSComputer::soft_reset() {
+
+    m_telecom.reset();
 
     /* RESET MUX */
     MUX_1.reset();

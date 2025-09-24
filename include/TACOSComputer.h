@@ -23,7 +23,10 @@ private:
     pte7300_sample_t m_sensata_6{};
     time_t m_last_sensors_polling;
 
+    Telecom m_telecom;
+
     void check_pte7300_sample(pte7300_reading_t reading, pte7300_sample_t& reg);
+    void process_telecom_command(const gse_uplink_t& packet);
 public:
     explicit TACOSComputer() {}
     void init();
