@@ -1,5 +1,5 @@
-#ifndef I2C_MUX_H
-#define I2C_MUX_H
+#ifndef DRIVERS_I2C_MUX_H
+#define DRIVERS_I2C_MUX_H
 
 #include <Arduino.h>
 #include <Wire.h>
@@ -27,4 +27,4 @@ public:
     inline TwoWire* get_i2c() {return m_i2c;}
 };
 
-#endif // I2C_MUX_H
+#endif // DRIVERS_I2C_MUX_H

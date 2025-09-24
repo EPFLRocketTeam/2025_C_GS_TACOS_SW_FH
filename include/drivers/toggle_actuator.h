@@ -1,5 +1,5 @@
-#ifndef TOGGLE_ACTUATOR_H
-#define TOGGLE_ACTUATOR_H
+#ifndef DRIVERS_TOGGLE_ACTUATOR_H
+#define DRIVERS_TOGGLE_ACTUATOR_H
 
 #include <Arduino.h>
 
@@ -31,4 +31,4 @@ public:
     void soft_reset();
 };
 
-#endif // TOGGLE_ACTUATOR_H
+#endif // DRIVERS_TOGGLE_ACTUATOR_H

@@ -45,7 +45,7 @@ void TACOSComputer::update(time_t current) {
      */
 
     #ifdef SENSORS_POLLING_RATE_MS
-    if(current - m_last_sensors_polling > SENSORS_POLLING_RATE_MS)
+    if(current - m_last_sensors_polling > SENSORS_POLLING_RATE_MS) {
     #endif
     check_pte7300_sample(SENSATA_1.sample(), m_sensata_1);
     check_pte7300_sample(SENSATA_2.sample(), m_sensata_2);

@@ -6,6 +6,7 @@
 #include "drivers/i2c_mux.h"
 #include "drivers/pte7300.h"
 #include "drivers/toggle_actuator.h"
+#include "telecom.h"
 
 class TACOSComputer {
 private:

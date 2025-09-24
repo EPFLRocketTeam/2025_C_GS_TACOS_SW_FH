@@ -1,5 +1,5 @@
-#ifndef PTE7300_H
-#define PTE7300_H
+#ifndef DRIVERS_PTE7300_H
+#define DRIVERS_PTE7300_H
 
 #include <Arduino.h>
 #include <PTE7300_I2C.h>
@@ -32,4 +32,4 @@ public:
     pte7300_reading_t sample();
 };
 
-#endif // PTE7300_H
+#endif // DRIVERS_PTE7300_H
