@@ -88,9 +88,6 @@ void TACOSComputer::soft_reset() {
     m_sensata_6 = {};
     m_last_sensors_polling = 0; //Wil force a new polling if SENSORS_POLLING_RATE_MS is defined
     
-    /* RESET STATUS */
-    m_pressurizing = false;
-
     /* RESET ACTATOR POSITIONS */
     TOGGLE_11.soft_reset();
     TOGGLE_12.soft_reset();

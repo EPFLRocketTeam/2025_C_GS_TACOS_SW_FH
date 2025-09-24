@@ -10,7 +10,6 @@
 
 class TACOSComputer {
 private:
-    bool m_pressurizing = false;
     bool m_lox_disconnecetd = false;
     bool m_eth_disconnecetd = false;
     bool m_N2_disconnecetd = false;
