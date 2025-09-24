@@ -11,21 +11,23 @@
 class TACOSComputer {
 private:
     bool m_lox_disconnecetd = false;
-    bool m_eth_disconnecetd = false;
-    bool m_N2_disconnecetd = false;
+    bool m_ambient_disconnecetd = false;
+    bool m_isolation_disconnecetd = false;
 
-    pte7300_sample_t m_sensata_1{};
-    pte7300_sample_t m_sensata_2{};
-    pte7300_sample_t m_sensata_3{};
-    pte7300_sample_t m_sensata_4{};
-    pte7300_sample_t m_sensata_5{};
-    pte7300_sample_t m_sensata_6{};
+    pte7300_sample_t m_gp1{};
+    pte7300_sample_t m_gp2{};
+    pte7300_sample_t m_gp3{};
+    pte7300_sample_t m_gp4{};
+    // pte7300_sample_t m_sensata_5{};
+    // pte7300_sample_t m_sensata_6{};
     time_t m_last_sensors_polling;
 
     Telecom m_telecom;
 
     void check_pte7300_sample(pte7300_reading_t reading, pte7300_sample_t& reg);
     void process_telecom_command(const gse_uplink_t& packet);
+    void check_status();
+    gse_downlink_t build_downlink();
 public:
     explicit TACOSComputer() {}
     void init();

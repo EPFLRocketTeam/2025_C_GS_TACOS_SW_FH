@@ -24,10 +24,12 @@ class ToggleActuator {
 private:
     toggle_type m_type;
     uint8_t m_pin;
+    uint8_t m_current_position;
 public:
     explicit ToggleActuator(const toggle_acutator_config_t& config): m_type{config.type}, m_pin{config.pin} {}
     void init();
     void set_position(const toggle_position position);
+    toggle_position get_current_position();
     void soft_reset();
 };
 
