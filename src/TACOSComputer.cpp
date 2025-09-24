@@ -1,4 +1,5 @@
 #include "TACOSComputer.h"
+#include <Servo.h>
 
 I2CMux MUX_1{{&Wire1, MUX_ADDR, MUX_nRST}};
 I2CMux MUX_2{{&Wire2, MUX_ADDR, MUX_nRST}};
@@ -26,8 +27,20 @@ ToggleActuator PC{{toggle_type::TOGGLE_TYPE_NC, 0}};
 ToggleActuator PR{{toggle_type::TOGGLE_TYPE_NC, 0}};
 //ToggleActuator TOGGLE_28{{toggle_type::TOGGLE_TYPE_NC, 0}};
 
+#define SERVO_1_PIN 0
+Servo SERVO_1{};
+
+#define SERVO_2_PIN 0
+Servo SERVO_2{};
+
+#define SERVO_OPEN 180
+#define SERVO_CLOSE 0
+
 void TACOSComputer::init() {
     m_telecom.init();
+    SERVO_1.attach(SERVO_1_PIN);
+    SERVO_2.attach(SERVO_2_PIN);
+
     soft_reset();
 
 }
@@ -40,7 +53,6 @@ void TACOSComputer::check_pte7300_sample(pte7300_reading_t reading, pte7300_samp
 void TACOSComputer::process_telecom_command(const gse_uplink_t& packet) {
     switch (packet.order_id)
     {
-
     case NO_PACKET:
     default:
         break;
