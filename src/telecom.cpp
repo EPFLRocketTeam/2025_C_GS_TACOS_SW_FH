@@ -70,7 +70,16 @@ void Telecom::update() {
 }
 
 void Telecom::reset() {
+    lora_downlink.end();
+    delay(50);
+    lora_downlink.begin(GSE_DOWNLINK_FREQUENCY);
 
+    lora_uplink.end();
+    delay(50);
+    lora_uplink.begin(UPLINK_FREQUENCY);
+    
+    lora_uplink.receive();
+    uplink_buffer.clear();
 }
 
 gse_uplink_t Telecom::get_last_packet_received(bool consume) {
