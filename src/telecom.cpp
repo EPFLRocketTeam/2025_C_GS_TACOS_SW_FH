@@ -4,7 +4,7 @@
 #include <LoRa.h>
 #include <LoopbackStream.h>
 
-#define LORA_UPLINK_PORT                SPI1
+#define LORA_UPLINK_PORT                SPI
 #define LORA_UPLINK_SCK                 35  
 #define LORA_UPLINK_MOSI                13
 #define LORA_UPLINK_MISO                14
@@ -26,29 +26,46 @@ LoRaClass lora_downlink;
 LoopbackStream uplink_buffer(MAX_BUFFER_SIZE);
 
 void Telecom::init() {
+    LORA_UPLINK_PORT.begin();
+    
+    
     lora_uplink.setPins(LORA_UPLINK_CS, LORA_UPLINK_RST, LORA_DOWNLINK_INT0);
     lora_uplink.setSPI(LORA_UPLINK_PORT);
-    lora_uplink.begin(UPLINK_FREQUENCY);
-
+    
+    if (!lora_uplink.begin(UPLINK_FREQUENCY)) {
+        Serial.println("Could not setup uplink radio");     
+    }
+  
     lora_uplink.setTxPower(UPLINK_POWER);
     lora_uplink.setSignalBandwidth(UPLINK_BW);
     lora_uplink.setSpreadingFactor(UPLINK_SF);
     lora_uplink.setCodingRate4(UPLINK_CR);
     lora_uplink.setPreambleLength(UPLINK_PREAMBLE_LEN);
+    
 
     #if (UPLINK_CRC)
     lora_uplink.enableCrc();
     #else
     lora_uplink.disableCrc();
     #endif
+    if (UPLINK_INVERSE_IQ) {
+        lora_uplink.enableInvertIQ();
+    } else {
+        lora_uplink.disableInvertIQ();
+    }
+    
 
     // Set uplink radio as a continuous receiver
     lora_uplink.onReceive(&lora_handle_uplink);
     lora_uplink.receive();
 
+    
+    LORA_DOWNLINK_PORT.begin();
     lora_downlink.setPins(LORA_DOWNLINK_CS, LORA_DOWNLINK_RST, LORA_DOWNLINK_INT0);
     lora_downlink.setSPI(LORA_DOWNLINK_PORT);
-    lora_downlink.begin(GSE_DOWNLINK_FREQUENCY);
+    if (!lora_downlink.begin(GSE_DOWNLINK_FREQUENCY)) {
+        Serial.println("Could not setup downlink radio");     
+    }
 
     lora_downlink.setTxPower(GSE_DOWNLINK_POWER);
     lora_downlink.setSignalBandwidth(GSE_DOWNLINK_BW);
@@ -62,6 +79,11 @@ void Telecom::init() {
     lora_downlink.disableCrc();
     #endif
 
+    if (GSE_DOWNLINK_INVERSE_IQ) {
+        lora_downlink.enableInvertIQ();
+    } else {
+        lora_downlink.disableInvertIQ();
+    }
 }
 
 void Telecom::update() {
@@ -99,7 +121,7 @@ void Telecom::send_packet(const gse_downlink_t& packet) {
     if (!lora_downlink.beginPacket()) {
         return;
     }
-
+    Serial.println("Sending packet");
     lora_downlink.write(encoded, gse_downlink_size + ADDITIONAL_BYTES);
     lora_downlink.endPacket(true);
     delete[] encoded;

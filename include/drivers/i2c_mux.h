@@ -4,8 +4,8 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-#define MUX_ADDR 0
-#define MUX_nRST 0
+#define MUX_ADDR 0x70
+#define MUX_nRST 36
 
 typedef struct i2c_mux_config_t {
     TwoWire* i2c;

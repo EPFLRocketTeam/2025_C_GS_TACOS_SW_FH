@@ -5,6 +5,7 @@
 TACOSComputer computer;
 
 void setup() {
+    delay(3000);
     Serial.begin(115200);
     Serial.println("Started");
     computer.init();

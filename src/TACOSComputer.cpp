@@ -11,28 +11,28 @@ PTE7300 GP4{{&MUX_1, 3}};
 //PTE7300 SENSATA_5{{&MUX_2, 0}};
 //PTE7300 SENSATA_6{{&MUX_2, 1}};
 
-ToggleActuator GQN1{{toggle_type::TOGGLE_TYPE_NC, 0}};
-ToggleActuator GQN2{{toggle_type::TOGGLE_TYPE_NC, 0}};
-ToggleActuator GQN3{{toggle_type::TOGGLE_TYPE_NC, 0}};
-ToggleActuator GQN4{{toggle_type::TOGGLE_TYPE_NC, 0}};
-ToggleActuator GQN5{{toggle_type::TOGGLE_TYPE_NC, 0}};
-ToggleActuator GQN6{{toggle_type::TOGGLE_TYPE_NC, 0}};
+ToggleActuator GQN1{{toggle_type::TOGGLE_TYPE_NC, 2}};
+ToggleActuator GQN2{{toggle_type::TOGGLE_TYPE_NC, 3}};
+ToggleActuator GQN3{{toggle_type::TOGGLE_TYPE_NC, 4}};
+ToggleActuator GQN4{{toggle_type::TOGGLE_TYPE_NC, 5}};
+ToggleActuator GQN5{{toggle_type::TOGGLE_TYPE_NC, 6}};
+ToggleActuator GQN6{{toggle_type::TOGGLE_TYPE_NC, 7}};
 
-ToggleActuator GPN{{toggle_type::TOGGLE_TYPE_NC, 0}};
-ToggleActuator GPA{{toggle_type::TOGGLE_TYPE_NC, 2}};
-ToggleActuator GVN{{toggle_type::TOGGLE_TYPE_NC, 0}};
-ToggleActuator GFE{{toggle_type::TOGGLE_TYPE_NC, 0}};
-ToggleActuator GFO{{toggle_type::TOGGLE_TYPE_NC, 0}};
-ToggleActuator GDO{{toggle_type::TOGGLE_TYPE_NC, 0}};
-ToggleActuator PC{{toggle_type::TOGGLE_TYPE_NC, 0}};
-ToggleActuator PUMP{{toggle_type::TOGGLE_TYPE_NC, 0}};
+ToggleActuator GPN{{toggle_type::TOGGLE_TYPE_NC, 8}};
+ToggleActuator GPA{{toggle_type::TOGGLE_TYPE_NC, 9}};
+ToggleActuator GVN{{toggle_type::TOGGLE_TYPE_NC, 10}};
+ToggleActuator GFE{{toggle_type::TOGGLE_TYPE_NC, 11}};
+ToggleActuator GFO{{toggle_type::TOGGLE_TYPE_NC, 12}};
+ToggleActuator GDO{{toggle_type::TOGGLE_TYPE_NC, 16}};
+ToggleActuator PC{{toggle_type::TOGGLE_TYPE_NC, 17}};
+ToggleActuator PUMP{{toggle_type::TOGGLE_TYPE_NC, 20}};
 // ToggleActuator PR{{toggle_type::TOGGLE_TYPE_NC, 0}};
 //ToggleActuator TOGGLE_28{{toggle_type::TOGGLE_TYPE_NC, 0}};
 
-#define SERVO_1_PIN 0
+#define SERVO_1_PIN 21
 Servo SERVO_1{};
 
-#define SERVO_2_PIN 0
+#define SERVO_2_PIN 25
 Servo SERVO_2{};
 
 #define SERVO_OPEN 180
@@ -58,6 +58,11 @@ void TACOSComputer::init() {
 
     SERVO_1.attach(SERVO_1_PIN);
     SERVO_2.attach(SERVO_2_PIN);
+
+    GP1.init();
+    GP2.init();
+    GP3.init();
+    GP4.init();
 
     GQN1.init();
     GQN2.init();
@@ -221,7 +226,7 @@ void TACOSComputer::update(time_t current) {
     check_pte7300_sample(GP2.sample(), m_gp2);
     check_pte7300_sample(GP3.sample(), m_gp3);
     check_pte7300_sample(GP4.sample(), m_gp4);
- 
+    
     m_telecom.send_packet(build_downlink());
     m_last_sensors_polling = current;
     #ifdef SENSORS_POLLING_RATE_MS
