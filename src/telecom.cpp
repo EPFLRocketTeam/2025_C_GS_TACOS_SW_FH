@@ -4,21 +4,21 @@
 #include <LoRa.h>
 #include <LoopbackStream.h>
 
-#define LORA_UPLINK_PORT                SPI
-#define LORA_UPLINK_SCK                 0   
-#define LORA_UPLINK_MOSI                0
-#define LORA_UPLINK_MISO                0
-#define LORA_UPLINK_CS                  0
-#define LORA_UPLINK_INT0                0
-#define LORA_UPLINK_RST                 0
+#define LORA_UPLINK_PORT                SPI1
+#define LORA_UPLINK_SCK                 35  
+#define LORA_UPLINK_MOSI                13
+#define LORA_UPLINK_MISO                14
+#define LORA_UPLINK_CS                  29
+#define LORA_UPLINK_INT0                28
+#define LORA_UPLINK_RST                 27
 
-#define LORA_DOWNLINK_PORT              SPI1
-#define LORA_DOWNLINK_SCK               0
-#define LORA_DOWNLINK_MOSI              0
-#define LORA_DOWNLINK_MISO              0
-#define LORA_DOWNLINK_CS                0
-#define LORA_DOWNLINK_INT0              0
-#define LORA_DOWNLINK_RST               0
+#define LORA_DOWNLINK_PORT              SPI2
+#define LORA_DOWNLINK_SCK               19
+#define LORA_DOWNLINK_MOSI              18
+#define LORA_DOWNLINK_MISO              31
+#define LORA_DOWNLINK_CS                30
+#define LORA_DOWNLINK_INT0              23
+#define LORA_DOWNLINK_RST               24
 
 #define lora_uplink LoRa
 LoRaClass lora_downlink;
@@ -96,11 +96,13 @@ gse_uplink_t Telecom::get_last_packet_received(bool consume) {
 void Telecom::send_packet(const gse_downlink_t& packet) {
     uint8_t* encoded{capsule_downlink.encode(GSE_TELEMETRY, ((uint8_t*) &packet), gse_downlink_size)};
 
-    if (!lora_downlink.beginPacket())
+    if (!lora_downlink.beginPacket()) {
         return;
+    }
 
     lora_downlink.write(encoded, gse_downlink_size + ADDITIONAL_BYTES);
     lora_downlink.endPacket(true);
+    delete[] encoded;
 
 }
 

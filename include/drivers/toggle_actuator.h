@@ -31,6 +31,7 @@ public:
     void set_position(const toggle_position position);
     toggle_position get_current_position();
     void soft_reset();
+    toggle_position toggle();
 };
 
 #endif // DRIVERS_TOGGLE_ACTUATOR_H

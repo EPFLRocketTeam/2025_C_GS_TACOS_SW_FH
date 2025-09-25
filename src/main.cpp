@@ -5,9 +5,13 @@
 TACOSComputer computer;
 
 void setup() {
+    Serial.begin(115200);
+    Serial.println("Started");
     computer.init();
 }
 
 void loop() {
+
     computer.update(millis());
+
 }

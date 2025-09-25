@@ -27,6 +27,8 @@ private:
     void check_pte7300_sample(pte7300_reading_t reading, pte7300_sample_t& reg);
     void process_telecom_command(const gse_uplink_t& packet);
     void check_status();
+    void TACOSComputer::process_scheduled_tasks(time_t current);
+    
     gse_downlink_t build_downlink();
 public:
     explicit TACOSComputer() {}
