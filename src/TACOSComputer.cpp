@@ -11,28 +11,28 @@ PTE7300 GP4{{&MUX_1, 3}};
 //PTE7300 SENSATA_5{{&MUX_2, 0}};
 //PTE7300 SENSATA_6{{&MUX_2, 1}};
 
-ToggleActuator GQN1{{toggle_type::TOGGLE_TYPE_NC, 2}};
-ToggleActuator GQN2{{toggle_type::TOGGLE_TYPE_NC, 3}};
-ToggleActuator GQN3{{toggle_type::TOGGLE_TYPE_NC, 4}};
-ToggleActuator GQN4{{toggle_type::TOGGLE_TYPE_NC, 5}};
-ToggleActuator GQN5{{toggle_type::TOGGLE_TYPE_NC, 6}};
-ToggleActuator GQN6{{toggle_type::TOGGLE_TYPE_NC, 7}};
+ToggleActuator GQN1{{toggle_type::TOGGLE_TYPE_NC, 1}}; //SOLENOID 11
+ToggleActuator GQN2{{toggle_type::TOGGLE_TYPE_NC, 0}}; //SOLENOID 12
+ToggleActuator GQN3{{toggle_type::TOGGLE_TYPE_NC, 3}}; //SOLENOID 13
+ToggleActuator GQN4{{toggle_type::TOGGLE_TYPE_NC, 2}}; //SOLENOID 14
+ToggleActuator GQN5{{toggle_type::TOGGLE_TYPE_NC, 5}}; //SOLENOID 15
+ToggleActuator GQN6{{toggle_type::TOGGLE_TYPE_NC, 4}}; //SOLENOID 16
 
-ToggleActuator GPN{{toggle_type::TOGGLE_TYPE_NC, 8}};
-ToggleActuator GPA{{toggle_type::TOGGLE_TYPE_NC, 9}};
-ToggleActuator GVN{{toggle_type::TOGGLE_TYPE_NC, 10}};
-ToggleActuator GFE{{toggle_type::TOGGLE_TYPE_NC, 11}};
-ToggleActuator GFO{{toggle_type::TOGGLE_TYPE_NC, 12}};
-ToggleActuator GDO{{toggle_type::TOGGLE_TYPE_NC, 16}};
-ToggleActuator PC{{toggle_type::TOGGLE_TYPE_NC, 17}};
-ToggleActuator PUMP{{toggle_type::TOGGLE_TYPE_NC, 20}};
+ToggleActuator GPN{{toggle_type::TOGGLE_TYPE_NC, 7}}; //SOLENOID 21
+ToggleActuator GPA{{toggle_type::TOGGLE_TYPE_NC, 6}}; //SOLENOID 22
+ToggleActuator GVN{{toggle_type::TOGGLE_TYPE_NC, 9}}; //SOLENOID 23
+ToggleActuator GFE{{toggle_type::TOGGLE_TYPE_NC, 8}}; //SOLENOID 24
+ToggleActuator GFO{{toggle_type::TOGGLE_TYPE_NC, 24}}; //SOLENOID 25
+ToggleActuator GDO{{toggle_type::TOGGLE_TYPE_NC, 10}}; //SOLENOID 26
+ToggleActuator PC{{toggle_type::TOGGLE_TYPE_NC, 20}}; //SOLENOID 27
+ToggleActuator PUMP{{toggle_type::TOGGLE_TYPE_NC, 25}}; //SOlENOID 28
 // ToggleActuator PR{{toggle_type::TOGGLE_TYPE_NC, 0}};
 //ToggleActuator TOGGLE_28{{toggle_type::TOGGLE_TYPE_NC, 0}};
 
-#define SERVO_1_PIN 21
+#define SERVO_1_PIN 29
 Servo SERVO_1{};
 
-#define SERVO_2_PIN 25
+#define SERVO_2_PIN 33
 Servo SERVO_2{};
 
 #define SERVO_OPEN 180

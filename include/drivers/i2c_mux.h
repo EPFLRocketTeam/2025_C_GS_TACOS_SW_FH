@@ -5,7 +5,7 @@
 #include <Wire.h>
 
 #define MUX_ADDR 0x70
-#define MUX_nRST 36
+#define MUX_nRST 14
 
 typedef struct i2c_mux_config_t {
     TwoWire* i2c;
