@@ -4,33 +4,29 @@
 #include <LoRa.h>
 #include <LoopbackStream.h>
 
-#define LORA_DOWNLINK_PORT              SPI
-#define LORA_DOWNLINK_SCK               13
-#define LORA_DOWNLINK_MOSI              11
-#define LORA_DOWNLINK_MISO              12
-#define LORA_DOWNLINK_CS                37
-#define LORA_DOWNLINK_INT0              36
-#define LORA_DOWNLINK_RST               35
+#define LORA_UPLINK_PORT              SPI
+#define LORA_UPLINK_SCK               13
+#define LORA_UPLINK_MOSI              11
+#define LORA_UPLINK_MISO              12
+#define LORA_UPLINK_CS                37
+#define LORA_UPLINK_INT0              36
+#define LORA_UPLINK_RST               35
 
-#define LORA_UPLINK_PORT                SPI1
-#define LORA_UPLINK_SCK                 27  
-#define LORA_UPLINK_MOSI                26
-#define LORA_UPLINK_MISO                39
-#define LORA_UPLINK_CS                  38
-#define LORA_UPLINK_INT0                31
-#define LORA_UPLINK_RST                 32
+#define LORA_DOWNLINK_PORT                SPI1
+#define LORA_DOWNLINK_SCK                 27  
+#define LORA_DOWNLINK_MOSI                26
+#define LORA_DOWNLINK_MISO                39
+#define LORA_DOWNLINK_CS                  38
+#define LORA_DOWNLINK_INT0                31
+#define LORA_DOWNLINK_RST                 32
 
 #define lora_uplink LoRa
+// LoRaClass lora_uplink;
 LoRaClass lora_downlink;
 
 LoopbackStream uplink_buffer(MAX_BUFFER_SIZE);
 
 void Telecom::init() {
-
-    LORA_UPLINK_PORT.setMISO(LORA_UPLINK_MISO);
-    LORA_UPLINK_PORT.setMOSI(LORA_UPLINK_MOSI);
-    LORA_UPLINK_PORT.setCS(LORA_UPLINK_CS);
-    LORA_UPLINK_PORT.setSCK(LORA_UPLINK_SCK);
     LORA_UPLINK_PORT.begin();
     lora_uplink.setPins(LORA_UPLINK_CS, LORA_UPLINK_RST, LORA_DOWNLINK_INT0);
     lora_uplink.setSPI(LORA_UPLINK_PORT);
@@ -51,15 +47,11 @@ void Telecom::init() {
     #else
     lora_uplink.disableCrc();
     #endif
-    if (UPLINK_INVERSE_IQ) {
-        lora_uplink.enableInvertIQ();
-    } else {
-        lora_uplink.disableInvertIQ();
-    }
-    
+
 
     // Set uplink radio as a continuous receiver
-    lora_uplink.onReceive(&lora_handle_uplink);
+    lora_uplink.onReceive(lora_handle_uplink);
+    lora_uplink.receive();
     lora_uplink.receive();
 
     
@@ -85,29 +77,37 @@ void Telecom::init() {
     #else
     lora_downlink.disableCrc();
     #endif
-
-    if (GSE_DOWNLINK_INVERSE_IQ) {
-        lora_downlink.enableInvertIQ();
-    } else {
-        lora_downlink.disableInvertIQ();
-    }
 }
 
 void Telecom::update() {
-    while (uplink_buffer.available())
+    int packet_size = lora_uplink.parsePacket();
+    if (packet_size) {
+        lora_handle_uplink(packet_size);
+        Serial.println("Packet handled");
+    }
+
+    while (uplink_buffer.available()) {
+        Serial.println("Decoding packet");
         capsule_uplink.decode(uplink_buffer.read());
+    }
 }
 
 void Telecom::reset() {
     lora_downlink.end();
     delay(50);
-    lora_downlink.begin(GSE_DOWNLINK_FREQUENCY);
+    if (!lora_downlink.begin(GSE_DOWNLINK_FREQUENCY)) {
+    Serial.println("Could not setup downlink radio");     
+    }
 
     lora_uplink.end();
     delay(50);
-    lora_uplink.begin(UPLINK_FREQUENCY);
+    if (!lora_uplink.begin(UPLINK_FREQUENCY)) {
+    Serial.println("Could not setup uplink radio");     
+    }
     
     lora_uplink.receive();
+    lora_uplink.receive();
+
     uplink_buffer.clear();
 }
 
@@ -128,14 +128,15 @@ void Telecom::send_packet(const gse_downlink_t& packet) {
     if (!lora_downlink.beginPacket()) {
         return;
     }
-    Serial.println("Sending packet");
+
     lora_downlink.write(encoded, gse_downlink_size + ADDITIONAL_BYTES);
-    lora_downlink.endPacket(true);
+    lora_downlink.endPacket(false);
     delete[] encoded;
 
 }
 
 void Telecom::lora_handle_uplink(int packet_size) {
+    Serial.println("Packet Received");
     for (int i = 0; i < packet_size; i++) {
         uplink_buffer.write(lora_uplink.read());
     }

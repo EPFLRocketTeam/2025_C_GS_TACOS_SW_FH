@@ -204,7 +204,7 @@ void TACOSComputer::check_status() {
 
 gse_downlink_t TACOSComputer::build_downlink() {
     gse_downlink_t packet;
-    packet.GPA_NC = GPA.get_current_position();
+    packet.GPN_NC2 = GPA.get_current_position();
     return packet;
 }
 
@@ -227,16 +227,18 @@ void TACOSComputer::update(time_t current) {
     check_pte7300_sample(GP3.sample(), m_gp3);
     check_pte7300_sample(GP4.sample(), m_gp4);
     
-    m_telecom.send_packet(build_downlink());
     m_last_sensors_polling = current;
     #ifdef SENSORS_POLLING_RATE_MS
     }
     #endif
+
+    m_telecom.send_packet(build_downlink());
+
 }
 
 void TACOSComputer::soft_reset() {
 
-    m_telecom.reset();
+    //m_telecom.reset();
 
     /* RESET MUX */
     MUX_1.reset();
