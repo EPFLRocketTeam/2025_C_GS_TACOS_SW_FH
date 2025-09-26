@@ -14,6 +14,7 @@ private:
 
     Capsule<Telecom> capsule_uplink;
     Capsule<Telecom> capsule_downlink;
+    void change_frequency(long new_freq);
 public:
     explicit Telecom(): capsule_uplink{&Telecom::capsule_uplink_callback, this}, capsule_downlink{&Telecom::capsule_downlink_callback, this} {}
 
@@ -24,8 +25,7 @@ public:
     gse_uplink_t get_last_packet_received(bool consume = true);
     void send_packet(const gse_downlink_t& packet);
 
-    static void lora_handle_uplink1(int packet_size);
-    static void lora_handle_uplink2(int packet_size);
+    static void lora_handle_uplink(int packet_size);
     void capsule_uplink_callback(uint8_t packet_id, uint8_t* data_in, uint32_t len);
     void capsule_downlink_callback(uint8_t packet_id, uint8_t* data_in, uint32_t len);
 };

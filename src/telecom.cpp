@@ -71,11 +71,21 @@ void Telecom::init() {
     lora_downlink.setCodingRate4(UPLINK_CR);
     lora_downlink.setPreambleLength(UPLINK_PREAMBLE_LEN);
 
+    lora_downlink.onReceive(lora_handle_uplink);
+    lora_downlink.receive();
+    lora_downlink.receive();
+
 
     #if (DOWNLINK_CRC)
     lora_downlink.enableCrc();
     #else
     lora_downlink.disableCrc();
+    #endif
+
+    #if (UPLINK_INVERSE_IQ)
+    lora_downlink.enableInvertIQ();
+    #else
+    lora_downlink.disableInvertIQ();
     #endif
 }
 
@@ -87,21 +97,18 @@ void Telecom::update() {
     }
 }
 
-void Telecom::reset() {
+void Telecom::change_frequency(long new_freq) {
     lora_downlink.end();
     delay(50);
-    if (!lora_downlink.begin(UPLINK_FREQUENCY)) {
+    if (!lora_downlink.begin(new_freq)) {
     Serial.println("Could not setup downlink radio");     
     }
+}
 
-    lora_uplink.end();
-    delay(50);
-    if (!lora_uplink.begin(UPLINK_FREQUENCY)) {
-    Serial.println("Could not setup uplink radio");     
-    }
-    
-    lora_uplink.receive();
-    lora_uplink.receive();
+void Telecom::reset() {
+    change_frequency(UPLINK_FREQUENCY);
+    lora_downlink.receive();
+    lora_downlink.receive();
 
     uplink_buffer.clear();
 }
@@ -120,29 +127,25 @@ gse_uplink_t Telecom::get_last_packet_received(bool consume) {
 void Telecom::send_packet(const gse_downlink_t& packet) {
     uint8_t* encoded{capsule_downlink.encode(GSE_TELEMETRY, ((uint8_t*) &packet), gse_downlink_size)};
 
-    if (!lora_uplink.beginPacket()) {
+    change_frequency(GSE_DOWNLINK_FREQUENCY);
+    if (!lora_downlink.beginPacket()) {
         return;
     }
-
-    lora_uplink.write(encoded, gse_downlink_size + ADDITIONAL_BYTES);
-    lora_uplink.endPacket(false);
+    lora_downlink.write(encoded, gse_downlink_size + ADDITIONAL_BYTES);
+    lora_downlink.endPacket(false);
+    change_frequency(UPLINK_FREQUENCY);
     delete[] encoded;
 
 }
 
-void Telecom::lora_handle_uplink1(int packet_size) {
+void Telecom::lora_handle_uplink(int packet_size) {
     Serial.println("Packet Received1");
     for (int i = 0; i < packet_size; i++) {
-        uplink_buffer.write(lora_uplink.read());
+        uplink_buffer.write(lora_downlink.read());
     }
 }
 
-void Telecom::lora_handle_uplink2(int packet_size) {
-    Serial.println("Packet Received2");
-    for (int i = 0; i < packet_size; i++) {
-        uplink_buffer.write(lora_uplink.read());
-    }
-}
+
 
 void Telecom::capsule_uplink_callback(uint8_t packet_id, uint8_t* data_in, uint32_t len) {
     memcpy(&m_last_packet_received, data_in, len);
