@@ -4,15 +4,15 @@
 #include <LoRa.h>
 #include <LoopbackStream.h>
 
-#define LORA_UPLINK_PORT              SPI
-#define LORA_UPLINK_SCK               13
-#define LORA_UPLINK_MOSI              11
-#define LORA_UPLINK_MISO              12
-#define LORA_UPLINK_CS                37
-#define LORA_UPLINK_INT0              36
-#define LORA_UPLINK_RST               35
+// #define LORA_UPLINK_PORT              SPI //LORA_1 dans kicad
+// #define LORA_UPLINK_SCK               13
+// #define LORA_UPLINK_MOSI              11
+// #define LORA_UPLINK_MISO              12
+// #define LORA_UPLINK_CS                37
+// #define LORA_UPLINK_INT0              36
+// #define LORA_UPLINK_RST               35
 
-#define LORA_DOWNLINK_PORT                SPI1
+#define LORA_DOWNLINK_PORT                SPI1 //LORA_2 dans kicad
 #define LORA_DOWNLINK_SCK                 27  
 #define LORA_DOWNLINK_MOSI                26
 #define LORA_DOWNLINK_MISO                39
@@ -20,39 +20,38 @@
 #define LORA_DOWNLINK_INT0                31
 #define LORA_DOWNLINK_RST                 32
 
-#define lora_uplink LoRa
+///#define lora_uplink LoRa
 // LoRaClass lora_uplink;
 LoRaClass lora_downlink;
 
 LoopbackStream uplink_buffer(MAX_BUFFER_SIZE);
 
 void Telecom::init() {
-    LORA_UPLINK_PORT.begin();
-    lora_uplink.setPins(LORA_UPLINK_CS, LORA_UPLINK_RST, LORA_DOWNLINK_INT0);
-    lora_uplink.setSPI(LORA_UPLINK_PORT);
+    // LORA_UPLINK_PORT.setCS(LORA_UPLINK_CS);
+    // LORA_UPLINK_PORT.begin();
+    // lora_uplink.setPins(LORA_UPLINK_CS, LORA_UPLINK_RST, LORA_DOWNLINK_INT0);
+    // lora_uplink.setSPI(LORA_UPLINK_PORT);
     
-    if (!lora_uplink.begin(UPLINK_FREQUENCY)) {
-        Serial.println("Could not setup uplink radio");     
-    }
+    // if (!lora_uplink.begin(UPLINK_FREQUENCY)) {
+    //     Serial.println("Could not setup uplink radio");     
+    // }
   
-    lora_uplink.setTxPower(UPLINK_POWER);
-    lora_uplink.setSignalBandwidth(UPLINK_BW);
-    lora_uplink.setSpreadingFactor(UPLINK_SF);
-    lora_uplink.setCodingRate4(UPLINK_CR);
-    lora_uplink.setPreambleLength(UPLINK_PREAMBLE_LEN);
+    // lora_uplink.setTxPower(UPLINK_POWER);
+    // lora_uplink.setSignalBandwidth(UPLINK_BW);
+    // lora_uplink.setSpreadingFactor(UPLINK_SF);
+    // lora_uplink.setCodingRate4(UPLINK_CR);
+    // lora_uplink.setPreambleLength(UPLINK_PREAMBLE_LEN);
     
+    // #if (UPLINK_CRC)
+    // lora_uplink.enableCrc();
+    // #else
+    // lora_uplink.disableCrc();
+    // #endif
 
-    #if (UPLINK_CRC)
-    lora_uplink.enableCrc();
-    #else
-    lora_uplink.disableCrc();
-    #endif
-
-
-    // Set uplink radio as a continuous receiver
-    lora_uplink.onReceive(lora_handle_uplink);
-    lora_uplink.receive();
-    lora_uplink.receive();
+    // // Set uplink radio as a continuous receiver
+    // lora_uplink.onReceive(lora_handle_uplink1);
+    // lora_uplink.receive();
+    // lora_uplink.receive();
 
     
     LORA_DOWNLINK_PORT.setMISO(LORA_DOWNLINK_MISO);
@@ -62,15 +61,16 @@ void Telecom::init() {
     LORA_DOWNLINK_PORT.begin();
     lora_downlink.setPins(LORA_DOWNLINK_CS, LORA_DOWNLINK_RST, LORA_DOWNLINK_INT0);
     lora_downlink.setSPI(LORA_DOWNLINK_PORT);
-    if (!lora_downlink.begin(GSE_DOWNLINK_FREQUENCY)) {
+    if (!lora_downlink.begin(UPLINK_FREQUENCY)) {
         Serial.println("Could not setup downlink radio");     
     }
 
-    lora_downlink.setTxPower(GSE_DOWNLINK_POWER);
-    lora_downlink.setSignalBandwidth(GSE_DOWNLINK_BW);
-    lora_downlink.setSpreadingFactor(GSE_DOWNLINK_SF);
-    lora_downlink.setCodingRate4(GSE_DOWNLINK_CR);
-    lora_downlink.setPreambleLength(GSE_DOWNLINK_PREAMBLE_LEN);
+    lora_downlink.setTxPower(UPLINK_POWER);
+    lora_downlink.setSignalBandwidth(UPLINK_BW);
+    lora_downlink.setSpreadingFactor(UPLINK_SF);
+    lora_downlink.setCodingRate4(UPLINK_CR);
+    lora_downlink.setPreambleLength(UPLINK_PREAMBLE_LEN);
+
 
     #if (DOWNLINK_CRC)
     lora_downlink.enableCrc();
@@ -80,11 +80,6 @@ void Telecom::init() {
 }
 
 void Telecom::update() {
-    int packet_size = lora_uplink.parsePacket();
-    if (packet_size) {
-        lora_handle_uplink(packet_size);
-        Serial.println("Packet handled");
-    }
 
     while (uplink_buffer.available()) {
         Serial.println("Decoding packet");
@@ -95,7 +90,7 @@ void Telecom::update() {
 void Telecom::reset() {
     lora_downlink.end();
     delay(50);
-    if (!lora_downlink.begin(GSE_DOWNLINK_FREQUENCY)) {
+    if (!lora_downlink.begin(UPLINK_FREQUENCY)) {
     Serial.println("Could not setup downlink radio");     
     }
 
@@ -125,18 +120,25 @@ gse_uplink_t Telecom::get_last_packet_received(bool consume) {
 void Telecom::send_packet(const gse_downlink_t& packet) {
     uint8_t* encoded{capsule_downlink.encode(GSE_TELEMETRY, ((uint8_t*) &packet), gse_downlink_size)};
 
-    if (!lora_downlink.beginPacket()) {
+    if (!lora_uplink.beginPacket()) {
         return;
     }
 
-    lora_downlink.write(encoded, gse_downlink_size + ADDITIONAL_BYTES);
-    lora_downlink.endPacket(false);
+    lora_uplink.write(encoded, gse_downlink_size + ADDITIONAL_BYTES);
+    lora_uplink.endPacket(false);
     delete[] encoded;
 
 }
 
-void Telecom::lora_handle_uplink(int packet_size) {
-    Serial.println("Packet Received");
+void Telecom::lora_handle_uplink1(int packet_size) {
+    Serial.println("Packet Received1");
+    for (int i = 0; i < packet_size; i++) {
+        uplink_buffer.write(lora_uplink.read());
+    }
+}
+
+void Telecom::lora_handle_uplink2(int packet_size) {
+    Serial.println("Packet Received2");
     for (int i = 0; i < packet_size; i++) {
         uplink_buffer.write(lora_uplink.read());
     }
