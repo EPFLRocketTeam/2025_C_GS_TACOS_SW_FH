@@ -67,14 +67,14 @@ static bool start_radio(
 
     Serial.print("[");
     Serial.print(label);
-    Serial.print("] Listening at ");
+    Serial.print("] Radio ready at ");
     Serial.print(frequency / 1E6, 3);
     Serial.println(" MHz");
 
     return true;
 }
 
-static void handle_radio_receive(LoRaClass& radio, const char* radio_name, int packet_size) {
+static void handle_radio_receive(LoRaClass& radio, const char* radio_name, int packet_size, bool push_to_uplink_buffer) {
     if (packet_size <= 0) {
         radio.receive();
         return;
@@ -94,7 +94,9 @@ static void handle_radio_receive(LoRaClass& radio, const char* radio_name, int p
     Serial.print("Raw bytes: ");
     for (int i = 0; i < packet_size; i++) {
         uint8_t byte_received = radio.read();
-        uplink_buffer.write(byte_received);
+        if (push_to_uplink_buffer) {
+            uplink_buffer.write(byte_received);
+        }
 
         Serial.print("0x");
         if (byte_received < 0x10) Serial.print("0");
@@ -104,9 +106,15 @@ static void handle_radio_receive(LoRaClass& radio, const char* radio_name, int p
         if ((i + 1) % 8 == 0) Serial.println();
     }
     Serial.println();
-    Serial.print("Packet data added to buffer for Capsule decoding (source: ");
-    Serial.print(radio_name);
-    Serial.println(")");
+    if (push_to_uplink_buffer) {
+        Serial.print("Packet data added to buffer for Capsule decoding (source: ");
+        Serial.print(radio_name);
+        Serial.println(")");
+    } else {
+        Serial.print("Packet captured on ");
+        Serial.print(radio_name);
+        Serial.println(" radio (monitoring only)");
+    }
     Serial.println("==========================\n");
 
     radio.receive();
@@ -115,6 +123,12 @@ static void handle_radio_receive(LoRaClass& radio, const char* radio_name, int p
 void Telecom::init() {
     // Store instance for static callback
     telecom_instance = this;
+    memset(&m_current_telemetry_packet, 0, sizeof(m_current_telemetry_packet));
+    memset(&m_last_packet_received, 0, sizeof(m_last_packet_received));
+    m_hasTelemetryPacket = false;
+    m_last_downlink_tx_ms = 0;
+    m_uplink_ready = false;
+    m_downlink_ready = false;
     
     // Initialize uplink radio on SPI
     LORA_UPLINK_PORT.setMISO(LORA_UPLINK_MISO);
@@ -138,7 +152,8 @@ void Telecom::init() {
         "UPLINK"
     );
 
-    if (uplink_ready) {
+    m_uplink_ready = uplink_ready;
+    if (m_uplink_ready) {
         lora_uplink.onReceive(lora_handle_uplink);
         lora_uplink.receive();
     }
@@ -165,21 +180,18 @@ void Telecom::init() {
         "DOWNLINK"
     );
 
-    if (downlink_ready) {
+    m_downlink_ready = downlink_ready;
+    if (m_downlink_ready) {
         lora_downlink.onReceive(lora_handle_downlink);
         lora_downlink.receive();
     }
     
     Serial.println("=== TELECOM INITIALIZED ===");
-    Serial.println("Mode: RECEIVE ONLY (sending disabled for debug)");
-    if (!uplink_ready) {
-        Serial.println("[WARN] Uplink radio inactive");
-    }
-    if (!downlink_ready) {
-        Serial.println("[WARN] Downlink radio inactive");
-    }
-    Serial.println("Waiting for Capsule packets on uplink and downlink radios...");
-    Serial.println("============================");
+    Serial.print("[UPLINK] ");
+    Serial.println(m_uplink_ready ? "Listening for ground station commands" : "FAILED to initialize");
+    Serial.print("[DOWNLINK] ");
+    Serial.println(m_downlink_ready ? "Ready to transmit telemetry" : "FAILED to initialize");
+    Serial.println("================================");
 }
 
 
@@ -187,23 +199,18 @@ void Telecom::init() {
 
 void Telecom::set_telemetry_packet(const gse_downlink_t& packet) {
     memcpy(&m_current_telemetry_packet, &packet, sizeof(gse_downlink_t));
+    m_hasTelemetryPacket = true;
 }
 
 // Modify update() to use the stored packet:
 void Telecom::update() {
-    static unsigned long lastTxTime = 0;
     unsigned long currentTime = millis();
     
     // Check if it's time to send telemetry data
-    if (currentTime - lastTxTime >= TELEMETRY_TX_INTERVAL_MS) {
-        // TEMPORARILY COMMENTED - Focus on receiving only
-        // send_packet(m_current_telemetry_packet);
-        lastTxTime = currentTime;
-        
-        // Return to receive mode immediately after sending
-        lora_downlink.receive();
-        lora_uplink.receive();
-        Serial.println("[DEBUG] Staying in receive mode on both radios (sending disabled)");
+    if (m_downlink_ready && m_hasTelemetryPacket && (currentTime - m_last_downlink_tx_ms >= TELEMETRY_TX_INTERVAL_MS)) {
+        if (send_packet(m_current_telemetry_packet)) {
+            m_last_downlink_tx_ms = currentTime;
+        }
     }
     
     // Process any buffered packets received via callback
@@ -235,7 +242,8 @@ void Telecom::reset() {
         "DOWNLINK"
     );
 
-    if (downlink_ready) {
+    m_downlink_ready = downlink_ready;
+    if (m_downlink_ready) {
         lora_downlink.onReceive(lora_handle_downlink);
         lora_downlink.receive();
     }
@@ -255,7 +263,8 @@ void Telecom::reset() {
         "UPLINK"
     );
 
-    if (uplink_ready) {
+    m_uplink_ready = uplink_ready;
+    if (m_uplink_ready) {
         lora_uplink.onReceive(lora_handle_uplink);
         lora_uplink.receive();
     }
@@ -274,7 +283,12 @@ gse_uplink_t Telecom::get_last_packet_received(bool consume) {
     
 }
 
-void Telecom::send_packet(const gse_downlink_t& packet) {
+bool Telecom::send_packet(const gse_downlink_t& packet) {
+    if (!m_downlink_ready) {
+        Serial.println("[DOWNLINK] Radio not ready, skipping telemetry transmission");
+        return false;
+    }
+
     Serial.println("=== SENDING PACKET ===");
     Serial.print("GP1: "); Serial.println(packet.GP1);
     Serial.print("GP2: "); Serial.println(packet.GP2);
@@ -294,14 +308,16 @@ void Telecom::send_packet(const gse_downlink_t& packet) {
     }
     Serial.println();
 
+    size_t encoded_len = gse_downlink_size + ADDITIONAL_BYTES;
+
     if (!lora_downlink.beginPacket()) {
         Serial.println("Failed to begin LoRa packet");
         delete[] encoded;
         lora_downlink.receive(); // Ensure we return to receive mode
-        return;
+        return false;
     }
 
-    size_t bytes_written = lora_downlink.write(encoded, gse_downlink_size + ADDITIONAL_BYTES);
+    size_t bytes_written = lora_downlink.write(encoded, encoded_len);
     bool success = lora_downlink.endPacket(false);
     delete[] encoded;
     
@@ -312,23 +328,30 @@ void Telecom::send_packet(const gse_downlink_t& packet) {
         Serial.print(" bytes + ");
         Serial.print(ADDITIONAL_BYTES);
         Serial.print(" header = ");
-        Serial.print(gse_downlink_size + ADDITIONAL_BYTES);
+        Serial.print(encoded_len);
         Serial.print(" total bytes, wrote: ");
         Serial.println(bytes_written);
+        if (bytes_written != encoded_len) {
+            Serial.print("[WARN] Expected to write ");
+            Serial.print(encoded_len);
+            Serial.print(" bytes but actually wrote ");
+            Serial.println(bytes_written);
+        }
     } else {
         Serial.println("Failed to send telemetry packet");
     }
     
     // Always return to receive mode
     lora_downlink.receive();
+    return success;
 }
 
 void Telecom::lora_handle_downlink(int packet_size) {
-    handle_radio_receive(lora_downlink, "DOWNLINK", packet_size);
+    handle_radio_receive(lora_downlink, "DOWNLINK", packet_size, false);
 }
 
 void Telecom::lora_handle_uplink(int packet_size) {
-    handle_radio_receive(lora_uplink, "UPLINK", packet_size);
+    handle_radio_receive(lora_uplink, "UPLINK", packet_size, true);
 }
 
 void Telecom::capsule_uplink_callback(uint8_t packet_id, uint8_t* data_in, uint32_t len) {

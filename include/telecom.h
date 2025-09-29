@@ -16,6 +16,10 @@ private:
     Capsule<Telecom> capsule_downlink;
     void change_frequency(long new_freq);
     gse_downlink_t m_current_telemetry_packet; // Store the current telemetry packet
+    bool m_hasTelemetryPacket = false;
+    bool m_uplink_ready = false;
+    bool m_downlink_ready = false;
+    unsigned long m_last_downlink_tx_ms = 0;
     
 public:
     explicit Telecom(): capsule_uplink{&Telecom::capsule_uplink_callback, this}, capsule_downlink{&Telecom::capsule_downlink_callback, this} {}
@@ -25,7 +29,7 @@ public:
     void reset();
     
     gse_uplink_t get_last_packet_received(bool consume = true);
-    void send_packet(const gse_downlink_t& packet);
+    bool send_packet(const gse_downlink_t& packet);
 
     static void lora_handle_downlink(int packet_size);
     static void lora_handle_uplink(int packet_size);
