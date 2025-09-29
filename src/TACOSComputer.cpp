@@ -11,21 +11,21 @@ PTE7300 GP4{{&MUX_1, 3}};
 //PTE7300 SENSATA_5{{&MUX_2, 0}};
 //PTE7300 SENSATA_6{{&MUX_2, 1}};
 
-ToggleActuator GQN1{{toggle_type::TOGGLE_TYPE_NC, 1}}; //SOLENOID 11
-ToggleActuator GQN2{{toggle_type::TOGGLE_TYPE_NC, 0}}; //SOLENOID 12
-ToggleActuator GQN3{{toggle_type::TOGGLE_TYPE_NC, 3}}; //SOLENOID 13
-ToggleActuator GQN4{{toggle_type::TOGGLE_TYPE_NC, 2}}; //SOLENOID 14
-ToggleActuator GQN5{{toggle_type::TOGGLE_TYPE_NC, 5}}; //SOLENOID 15
-ToggleActuator GQN6{{toggle_type::TOGGLE_TYPE_NC, 4}}; //SOLENOID 16
+ToggleActuator GQN1{{toggle_type::TOGGLE_TYPE_NC, 0}}; //out 11
+ToggleActuator GQN2{{toggle_type::TOGGLE_TYPE_NC, 1}}; //out 12
+ToggleActuator GQN3{{toggle_type::TOGGLE_TYPE_NC, 2}}; //out 13
+ToggleActuator GQN4{{toggle_type::TOGGLE_TYPE_NC, 3}}; //out 14
+ToggleActuator GQN5{{toggle_type::TOGGLE_TYPE_NC, 4}}; //out 15
+ToggleActuator GQN6{{toggle_type::TOGGLE_TYPE_NC, 5}}; //out 16
 
-ToggleActuator GPN{{toggle_type::TOGGLE_TYPE_NC, 7}}; //SOLENOID 21
-ToggleActuator GPA{{toggle_type::TOGGLE_TYPE_NC, 6}}; //SOLENOID 22
-ToggleActuator GVN{{toggle_type::TOGGLE_TYPE_NC, 9}}; //SOLENOID 23
-ToggleActuator GFE{{toggle_type::TOGGLE_TYPE_NC, 8}}; //SOLENOID 24
-ToggleActuator GFO{{toggle_type::TOGGLE_TYPE_NC, 24}}; //SOLENOID 25
-ToggleActuator GDO{{toggle_type::TOGGLE_TYPE_NC, 10}}; //SOLENOID 26
-ToggleActuator PC{{toggle_type::TOGGLE_TYPE_NC, 20}}; //SOLENOID 27
-ToggleActuator PUMP{{toggle_type::TOGGLE_TYPE_NC, 25}}; //SOlENOID 28
+ToggleActuator GPN{{toggle_type::TOGGLE_TYPE_NC, 6}}; //out 21
+ToggleActuator GPA{{toggle_type::TOGGLE_TYPE_NC, 7}}; //out 22
+ToggleActuator GVN{{toggle_type::TOGGLE_TYPE_NC, 8}}; //out 23
+ToggleActuator GFE{{toggle_type::TOGGLE_TYPE_NC, 9}}; //out 24
+ToggleActuator GFO{{toggle_type::TOGGLE_TYPE_NC, 24}}; //out 25
+ToggleActuator GDO{{toggle_type::TOGGLE_TYPE_NC, 10}}; //out 26
+ToggleActuator PC{{toggle_type::TOGGLE_TYPE_NC, 20}}; //out 27
+ToggleActuator PUMP{{toggle_type::TOGGLE_TYPE_NC, 25}}; //out 28
 // ToggleActuator PR{{toggle_type::TOGGLE_TYPE_NC, 0}};
 //ToggleActuator TOGGLE_28{{toggle_type::TOGGLE_TYPE_NC, 0}};
 
@@ -49,6 +49,32 @@ struct ScheduledTask {
 // Array to hold scheduled tasks
 #define MAX_SCHEDULED_TASKS 5
 ScheduledTask scheduled_tasks[MAX_SCHEDULED_TASKS];
+
+namespace {
+
+bool apply_solenoid_command(ToggleActuator& actuator, uint8_t order_value, const char* label) {
+    if (order_value == ACTIVE) {
+        actuator.set_position(TOGGLE_POSITION_OPEN);
+    } else if (order_value == INACTIVE) {
+        actuator.set_position(TOGGLE_POSITION_CLOSE);
+    } else {
+        actuator.toggle();
+        Serial.print("[CMD][WARN] Non-explicit order value 0x");
+        Serial.print(order_value, HEX);
+        Serial.print(" for ");
+        Serial.print(label);
+        Serial.println(" -> toggling device");
+    }
+
+    toggle_position actual = actuator.get_current_position();
+    Serial.print("[CMD] ");
+    Serial.print(label);
+    Serial.print(" -> ");
+    Serial.println(actual == TOGGLE_POSITION_OPEN ? "OPEN" : "CLOSE");
+    return true;
+}
+
+}
 
 
 
@@ -126,59 +152,59 @@ void TACOSComputer::process_telecom_command(const gse_uplink_t& packet) {
     switch (packet.order_id)
     {
     case CMD_ID::GSE_CMD_TOGGLE_GQN1: {
-        GQN1.toggle();
+        apply_solenoid_command(GQN1, packet.order_value, "GQN1");
         break;
     }    
     case CMD_ID::GSE_CMD_TOGGLE_GQN2: {
-        GQN2.toggle();
+        apply_solenoid_command(GQN2, packet.order_value, "GQN2");
         break;
     }    
     case CMD_ID::GSE_CMD_TOGGLE_GQN3: {
-        GQN3.toggle();
+        apply_solenoid_command(GQN3, packet.order_value, "GQN3");
         break;
     }    
     case CMD_ID::GSE_CMD_TOGGLE_GQN4: {
-        GQN4.toggle();
+        apply_solenoid_command(GQN4, packet.order_value, "GQN4");
         break;
     }    
     case CMD_ID::GSE_CMD_TOGGLE_GQN5: {
-        GQN5.toggle();
+        apply_solenoid_command(GQN5, packet.order_value, "GQN5");
         break;
     }    
     case CMD_ID::GSE_CMD_TOGGLE_GQN6: {
-        GQN6.toggle();
+        apply_solenoid_command(GQN6, packet.order_value, "GQN6");
         break;
     }    
     case CMD_ID::GSE_CMD_TOGGLE_GPN: {
-        GPN.toggle();
+        apply_solenoid_command(GPN, packet.order_value, "GPN");
         break;
     }    
     case CMD_ID::GSE_CMD_TOGGLE_GPA: {
-        GPA.toggle();
+        apply_solenoid_command(GPA, packet.order_value, "GPA");
         break;
     }    
     case CMD_ID::GSE_CMD_TOGGLE_GVN: {
-        GVN.toggle();
+        apply_solenoid_command(GVN, packet.order_value, "GVN");
         break;
     }    
     case CMD_ID::GSE_CMD_TOGGLE_GFE: {
-        GFE.toggle();
+        apply_solenoid_command(GFE, packet.order_value, "GFE");
         break;
     }    
     case CMD_ID::GSE_CMD_TOGGLE_GFO: {
-        GFO.toggle();
+        apply_solenoid_command(GFO, packet.order_value, "GFO");
         break;
     }    
     case CMD_ID::GSE_CMD_TOGGLE_GDO: {
-        GDO.toggle();
+        apply_solenoid_command(GDO, packet.order_value, "GDO");
         break;
     }    
     case CMD_ID::GSE_CMD_TOGGLE_PC: {
-        PC.toggle();
+        apply_solenoid_command(PC, packet.order_value, "PC");
         break;
     }    
     case CMD_ID::GSE_CMD_TOGGLE_PUMP: {
-        PUMP.toggle();
+        apply_solenoid_command(PUMP, packet.order_value, "PUMP");
         break;
     }    
     case CMD_ID::GSE_CMD_SERVO_1: {

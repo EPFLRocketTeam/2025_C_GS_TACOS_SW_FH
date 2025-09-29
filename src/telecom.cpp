@@ -292,6 +292,16 @@ bool Telecom::send_packet(const gse_downlink_t& packet) {
     Serial.println("=== SENDING PACKET ===");
     Serial.print("GP1: "); Serial.println(packet.GP1);
     Serial.print("GP2: "); Serial.println(packet.GP2);
+    Serial.print("GQN_NC3: "); Serial.println(packet.GQN_NC3);
+    Serial.print("GQN_NC4: "); Serial.println(packet.GQN_NC4);
+    Serial.print("GQN_NC5: "); Serial.println(packet.GQN_NC5);
+    Serial.print("GPN_NC1: "); Serial.println(packet.GPN_NC1);
+    Serial.print("GPN_NC2: "); Serial.println(packet.GPN_NC2);
+    Serial.print("GVN_NC: "); Serial.println(packet.GVN_NC);
+    Serial.print("GFE_NC: "); Serial.println(packet.GFE_NC);
+    Serial.print("GFO_NCC: "); Serial.println(packet.GFO_NCC);
+    Serial.print("GDO_NCC: "); Serial.println(packet.GDO_NCC);
+    Serial.print("PC_OLC: "); Serial.println(packet.PC_OLC);
     Serial.print("GP3: "); Serial.println(packet.GP3);
     Serial.print("GP4: "); Serial.println(packet.GP4);
     Serial.print("GP5: "); Serial.println(packet.GP5);
