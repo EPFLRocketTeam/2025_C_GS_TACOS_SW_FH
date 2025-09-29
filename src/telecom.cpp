@@ -61,7 +61,7 @@ void Telecom::init() {
 }
 
 
-#define TELEMETRY_TX_INTERVAL_MS 200  // 5Hz transmission rate
+#define TELEMETRY_TX_INTERVAL_MS 1000  // 1Hz transmission rate
 
 void Telecom::set_telemetry_packet(const gse_downlink_t& packet) {
     memcpy(&m_current_telemetry_packet, &packet, sizeof(gse_downlink_t));
@@ -124,17 +124,28 @@ void Telecom::send_packet(const gse_downlink_t& packet) {
     uint8_t* encoded{capsule_downlink.encode(GSE_TELEMETRY, ((uint8_t*) &packet), gse_downlink_size)};
 
     if (!lora_downlink.beginPacket()) {
+        Serial.println("Failed to begin LoRa packet");
         delete[] encoded;
         lora_downlink.receive(); // Ensure we return to receive mode
         return;
     }
 
-    lora_downlink.write(encoded, gse_downlink_size + ADDITIONAL_BYTES);
+    size_t bytes_written = lora_downlink.write(encoded, gse_downlink_size + ADDITIONAL_BYTES);
     bool success = lora_downlink.endPacket(false);
     delete[] encoded;
     
     if (success) {
-        Serial.println("Telemetry packet sent");
+        Serial.print("Telemetry packet sent successfully - ");
+        Serial.print("Packet size: ");
+        Serial.print(gse_downlink_size);
+        Serial.print(" bytes + ");
+        Serial.print(ADDITIONAL_BYTES);
+        Serial.print(" header = ");
+        Serial.print(gse_downlink_size + ADDITIONAL_BYTES);
+        Serial.print(" total bytes, wrote: ");
+        Serial.println(bytes_written);
+    } else {
+        Serial.println("Failed to send telemetry packet");
     }
     
     // Always return to receive mode

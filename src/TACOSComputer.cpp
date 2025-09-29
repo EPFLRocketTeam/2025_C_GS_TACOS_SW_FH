@@ -213,27 +213,17 @@ gse_downlink_t TACOSComputer::build_downlink() {
     packet.GP2 = m_gp2.pressure;  // LOX pressure in the deware
     packet.GP3 = m_gp3.pressure;  // Pressure in the low-pressure side of the gas booster
     packet.GP4 = m_gp4.pressure;  // Pressure before the pneumatic valve
-    // packet.GP5 = m_gp5.pressure;  // Uncomment if you have this sensor
+    packet.GP5 = 0.0f;            // Pressure in the ethanol filling line (not available, set to 0)
     
-    // Add toggle states using the correct field names
-    // GQN_NC1 (Nitrogen and Ethanol disconnect actuation)
-    packet.GQN_NC1 = 0;
-    
-    // GQN_NC2 (LOX disconnect actuation) - combine multiple values into bits
-    packet.GQN_NC2 = 0;
-    packet.GQN_NC2 |= (GQN1.get_current_position() << 0); // Bit 0
-    packet.GQN_NC2 |= (GQN2.get_current_position() << 1); // Bit 1
-    packet.GQN_NC2 |= (GQN3.get_current_position() << 2); // Bit 2
-    packet.GQN_NC2 |= (GQN4.get_current_position() << 3); // Bit 3
-    packet.GQN_NC2 |= (GQN5.get_current_position() << 4); // Bit 4
-    packet.GQN_NC2 |= (GQN6.get_current_position() << 5); // Bit 5
-    
-    // Reserved fields
-    packet.GQN_NC3 = 0;  // Reserved
-    packet.GQN_NC4 = 0;  // Reserved
+    // Add toggle states - each field is a separate uint8_t per protocol
+    // Map physical valves to protocol fields
+    packet.GQN_NC1 = GQN1.get_current_position(); // Nitrogen and Ethanol disconnect actuation
+    packet.GQN_NC2 = GQN2.get_current_position(); // LOX disconnect actuation
+    packet.GQN_NC3 = GQN3.get_current_position(); // Reserved (using GQN3)
+    packet.GQN_NC4 = GQN4.get_current_position(); // Reserved (using GQN4)
     
     // GQN_NC5 (Low mass flow anti-freeze lox disconnect)
-    packet.GQN_NC5 = 0;
+    packet.GQN_NC5 = GQN5.get_current_position();
     
     // GPN_NC1 (Controls the activation of the pressure booster)
     packet.GPN_NC1 = GPA.get_current_position();
@@ -246,17 +236,9 @@ gse_downlink_t TACOSComputer::build_downlink() {
     packet.GDO_NCC = GDO.get_current_position();  // Vent the tube before disconnect
     packet.PC_OLC = PC.get_current_position();    // Trigger Lox disconnect and purge the tube of LOX
     
-    // For PUMP status, we could use a reserved field if available, or add to a status byte
-    // For now, we'll just leave it out as there's no direct field for it
-    
-    // We can include system status info in unused bits of other fields if needed
-    // For example, if GQN_NC1 isn't fully used:
-    if (m_lox_disconnecetd) {
-        packet.GQN_NC1 |= 0x80;  // Set highest bit
-    }
-    if (m_ambient_disconnecetd) {
-        packet.GQN_NC1 |= 0x40;  // Set second-highest bit
-    }
+    // Note: PUMP status and GQN6 are not directly mapped in this protocol version
+    // System status (m_lox_disconnecetd, m_ambient_disconnecetd) could be added to
+    // a future protocol version if needed
     
     return packet;
 }
@@ -268,7 +250,7 @@ void TACOSComputer::update(time_t current) {
     // Provide the packet to the Telecom subsystem
     m_telecom.set_telemetry_packet(telemetry_packet);
     
-    // Update telecom subsystem (this will send the packet at 5Hz)
+    // Update telecom subsystem (this will send the packet at 1Hz)
     m_telecom.update();
     
     // Process scheduled tasks (servo movements, etc.)
