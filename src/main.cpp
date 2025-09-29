@@ -4,29 +4,6 @@
 #include <SPI.h>
 #include <LoRa.h>
 
-#define LORA_DOWNLINK_PORT              SPI
-#define LORA_DOWNLINK_SCK               13
-#define LORA_DOWNLINK_MOSI              11
-#define LORA_DOWNLINK_MISO              12
-#define LORA_DOWNLINK_CS                37
-#define LORA_DOWNLINK_INT0              36
-#define LORA_DOWNLINK_RST               35
-
-#define LORA_UPLINK_PORT                SPI1
-#define LORA_UPLINK_SCK                 27  
-#define LORA_UPLINK_MOSI                26
-#define LORA_UPLINK_MISO                39
-#define LORA_UPLINK_CS                  38
-#define LORA_UPLINK_INT0                31
-#define LORA_UPLINK_RST                 32
-
-// #define LORA_DOWNLINK_PORT              SPI1
-// #define LORA_DOWNLINK_SCK               19
-// #define LORA_DOWNLINK_MOSI              18
-// #define LORA_DOWNLINK_MISO              31
-// #define LORA_DOWNLINK_CS                38
-// #define LORA_DOWNLINK_INT0              31
-// #define LORA_DOWNLINK_RST               32
 
 TACOSComputer computer;
 
