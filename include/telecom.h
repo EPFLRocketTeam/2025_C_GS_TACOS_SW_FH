@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 #include <Protocol.h>
-#include <capsule.h>
+#include "capsule.h"
 
 // Add your declarations here
 class Telecom {
@@ -15,6 +15,8 @@ private:
     Capsule<Telecom> capsule_uplink;
     Capsule<Telecom> capsule_downlink;
     void change_frequency(long new_freq);
+    gse_downlink_t m_current_telemetry_packet; // Store the current telemetry packet
+    
 public:
     explicit Telecom(): capsule_uplink{&Telecom::capsule_uplink_callback, this}, capsule_downlink{&Telecom::capsule_downlink_callback, this} {}
 
@@ -28,6 +30,8 @@ public:
     static void lora_handle_uplink(int packet_size);
     void capsule_uplink_callback(uint8_t packet_id, uint8_t* data_in, uint32_t len);
     void capsule_downlink_callback(uint8_t packet_id, uint8_t* data_in, uint32_t len);
+
+    void set_telemetry_packet(const gse_downlink_t& packet);
 };
 
 #endif // TELECOM_H

@@ -204,36 +204,94 @@ void TACOSComputer::check_status() {
 
 gse_downlink_t TACOSComputer::build_downlink() {
     gse_downlink_t packet;
-    packet.GPN_NC2 = GPA.get_current_position();
+    
+    // Clear packet
+    memset(&packet, 0, sizeof(gse_downlink_t));
+    
+    // Add pressure sensor readings - use the actual fields from the structure
+    packet.GP1 = m_gp1.pressure;  // Nitrogen pressure in the filling line
+    packet.GP2 = m_gp2.pressure;  // LOX pressure in the deware
+    packet.GP3 = m_gp3.pressure;  // Pressure in the low-pressure side of the gas booster
+    packet.GP4 = m_gp4.pressure;  // Pressure before the pneumatic valve
+    // packet.GP5 = m_gp5.pressure;  // Uncomment if you have this sensor
+    
+    // Add toggle states using the correct field names
+    // GQN_NC1 (Nitrogen and Ethanol disconnect actuation)
+    packet.GQN_NC1 = 0;
+    
+    // GQN_NC2 (LOX disconnect actuation) - combine multiple values into bits
+    packet.GQN_NC2 = 0;
+    packet.GQN_NC2 |= (GQN1.get_current_position() << 0); // Bit 0
+    packet.GQN_NC2 |= (GQN2.get_current_position() << 1); // Bit 1
+    packet.GQN_NC2 |= (GQN3.get_current_position() << 2); // Bit 2
+    packet.GQN_NC2 |= (GQN4.get_current_position() << 3); // Bit 3
+    packet.GQN_NC2 |= (GQN5.get_current_position() << 4); // Bit 4
+    packet.GQN_NC2 |= (GQN6.get_current_position() << 5); // Bit 5
+    
+    // Reserved fields
+    packet.GQN_NC3 = 0;  // Reserved
+    packet.GQN_NC4 = 0;  // Reserved
+    
+    // GQN_NC5 (Low mass flow anti-freeze lox disconnect)
+    packet.GQN_NC5 = 0;
+    
+    // GPN_NC1 (Controls the activation of the pressure booster)
+    packet.GPN_NC1 = GPA.get_current_position();
+    
+    // Other toggle states
+    packet.GPN_NC2 = GPN.get_current_position();  // Control the opening of the high pressure bottle
+    packet.GVN_NC = GVN.get_current_position();   // Vents the tube before disconnect
+    packet.GFE_NC = GFE.get_current_position();   // Controls the filling of ethanol along with the pump
+    packet.GFO_NCC = GFO.get_current_position();  // Controls LOX filling
+    packet.GDO_NCC = GDO.get_current_position();  // Vent the tube before disconnect
+    packet.PC_OLC = PC.get_current_position();    // Trigger Lox disconnect and purge the tube of LOX
+    
+    // For PUMP status, we could use a reserved field if available, or add to a status byte
+    // For now, we'll just leave it out as there's no direct field for it
+    
+    // We can include system status info in unused bits of other fields if needed
+    // For example, if GQN_NC1 isn't fully used:
+    if (m_lox_disconnecetd) {
+        packet.GQN_NC1 |= 0x80;  // Set highest bit
+    }
+    if (m_ambient_disconnecetd) {
+        packet.GQN_NC1 |= 0x40;  // Set second-highest bit
+    }
+    
     return packet;
 }
 
 void TACOSComputer::update(time_t current) {
-
-    // Fetch commands
-    m_telecom.update();
-    process_scheduled_tasks(current);
-    // Process sensors and actuate
-    process_telecom_command(m_telecom.get_last_packet_received(true));
-    // Update status
-    check_status();
-
-    // Poll sensors
-    #ifdef SENSORS_POLLING_RATE_MS
-    if(current - m_last_sensors_polling > SENSORS_POLLING_RATE_MS) {
-    #endif
-    check_pte7300_sample(GP1.sample(), m_gp1);
-    check_pte7300_sample(GP2.sample(), m_gp2);
-    check_pte7300_sample(GP3.sample(), m_gp3);
-    check_pte7300_sample(GP4.sample(), m_gp4);
+    // First, build the telemetry packet with current data
+    gse_downlink_t telemetry_packet = build_downlink();
     
-    m_last_sensors_polling = current;
+    // Provide the packet to the Telecom subsystem
+    m_telecom.set_telemetry_packet(telemetry_packet);
+    
+    // Update telecom subsystem (this will send the packet at 5Hz)
+    m_telecom.update();
+    
+    // Process scheduled tasks (servo movements, etc.)
+    process_scheduled_tasks(current);
+    
+    // Check for new sensor readings and update internal state
     #ifdef SENSORS_POLLING_RATE_MS
+    if (current - m_last_sensors_polling > SENSORS_POLLING_RATE_MS) {
+        pte7300_reading_t reading;
+
+        //ajouter la fonction de lecture des capteurs
+        // Check system status
+        check_status();
+        
+        m_last_sensors_polling = current;
     }
     #endif
-
-    m_telecom.send_packet(build_downlink());
-
+    
+    // Process any incoming commands
+    gse_uplink_t packet = m_telecom.get_last_packet_received(true);
+    if (packet.order_id != 0) {
+        process_telecom_command(packet);
+    }
 }
 
 void TACOSComputer::soft_reset() {
