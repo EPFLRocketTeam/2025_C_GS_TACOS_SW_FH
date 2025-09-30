@@ -261,6 +261,7 @@ gse_downlink_t TACOSComputer::build_downlink() {
     packet.GFO_NCC = GFO.get_current_position();  // Controls LOX filling
     packet.GDO_NCC = GDO.get_current_position();  // Vent the tube before disconnect
     packet.PC_OLC = PC.get_current_position();    // Trigger Lox disconnect and purge the tube of LOX
+    packet.PUMP = PUMP.get_current_position();
     
     // Note: PUMP status and GQN6 are not directly mapped in this protocol version
     // System status (m_lox_disconnecetd, m_ambient_disconnecetd) could be added to
