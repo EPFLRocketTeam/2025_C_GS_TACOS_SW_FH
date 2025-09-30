@@ -24,8 +24,8 @@ ToggleActuator GVN{{toggle_type::TOGGLE_TYPE_NC, 8}}; //out 23
 ToggleActuator GFE{{toggle_type::TOGGLE_TYPE_NC, 9}}; //out 24
 ToggleActuator GFO{{toggle_type::TOGGLE_TYPE_NC, 24}}; //out 25
 ToggleActuator GDO{{toggle_type::TOGGLE_TYPE_NC, 10}}; //out 26
-ToggleActuator PC{{toggle_type::TOGGLE_TYPE_NC, 20}}; //out 27
-ToggleActuator PUMP{{toggle_type::TOGGLE_TYPE_NC, 25}}; //out 28
+//ToggleActuator PC{{toggle_type::TOGGLE_TYPE_NC, 20}}; //out 27
+ToggleActuator PUMP{{toggle_type::TOGGLE_TYPE_NC, 28}}; //out 28
 // ToggleActuator PR{{toggle_type::TOGGLE_TYPE_NC, 0}};
 //ToggleActuator TOGGLE_28{{toggle_type::TOGGLE_TYPE_NC, 0}};
 
@@ -103,7 +103,7 @@ void TACOSComputer::init() {
     GFE.init();
     GFO.init();
     GDO.init();
-    PC.init();
+    //PC.init();
     PUMP.init();
 
     // Initialize scheduled tasks array
@@ -199,11 +199,12 @@ void TACOSComputer::process_telecom_command(const gse_uplink_t& packet) {
         apply_solenoid_command(GDO, packet.order_value, "GDO");
         break;
     }    
-    case CMD_ID::GSE_CMD_TOGGLE_PC: {
-        apply_solenoid_command(PC, packet.order_value, "PC");
-        break;
-    }    
+    // case CMD_ID::GSE_CMD_TOGGLE_PC: {
+    //     apply_solenoid_command(PC, packet.order_value, "PC");
+    //     break;
+    // }    
     case CMD_ID::GSE_CMD_TOGGLE_PUMP: {
+        // PUMP.toggle();
         apply_solenoid_command(PUMP, packet.order_value, "PUMP");
         break;
     }    
@@ -260,7 +261,7 @@ gse_downlink_t TACOSComputer::build_downlink() {
     packet.GFE_NC = GFE.get_current_position();   // Controls the filling of ethanol along with the pump
     packet.GFO_NCC = GFO.get_current_position();  // Controls LOX filling
     packet.GDO_NCC = GDO.get_current_position();  // Vent the tube before disconnect
-    packet.PC_OLC = PC.get_current_position();    // Trigger Lox disconnect and purge the tube of LOX
+    //packet.PC_OLC = PC.get_current_position();    // Trigger Lox disconnect and purge the tube of LOX
     packet.PUMP = PUMP.get_current_position();
     
     // Note: PUMP status and GQN6 are not directly mapped in this protocol version
@@ -331,6 +332,6 @@ void TACOSComputer::soft_reset() {
     GVN.soft_reset();
     GFO.soft_reset();
     GDO.soft_reset();
-    PC.soft_reset();
+    // PC.soft_reset();
     
 }
