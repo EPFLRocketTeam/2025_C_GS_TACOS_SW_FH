@@ -307,6 +307,7 @@ bool Telecom::send_packet(const gse_downlink_t& packet) {
     Serial.print("GP5: "); Serial.println(packet.GP5);
     Serial.print("GQN_NC1: "); Serial.println(packet.GQN_NC1);
     Serial.print("GQN_NC2: "); Serial.println(packet.GQN_NC2);
+    Serial.print("PUMP: "); Serial.println(packet.PUMP);
     
     uint8_t* encoded{capsule_downlink.encode(GSE_TELEMETRY, ((uint8_t*) &packet), gse_downlink_size)};
 
