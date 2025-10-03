@@ -13,51 +13,13 @@ void setup() {
     Serial.println("Starting");
     computer.init();
 
-
-    // LORA_UPLINK_PORT.setMISO(LORA_UPLINK_MISO);
-    // LORA_UPLINK_PORT.setMOSI(LORA_UPLINK_MOSI);
-    // LORA_UPLINK_PORT.setCS(LORA_UPLINK_CS);
-    // LORA_UPLINK_PORT.setSCK(LORA_UPLINK_SCK);
-    // LORA_UPLINK_PORT.begin();
-	// LoRa.setPins(LORA_UPLINK_CS, LORA_UPLINK_RST, LORA_UPLINK_INT0);
-	// LoRa.setSPI(LORA_UPLINK_PORT);
+	//computer.force_all_solenoids_open(); // Pour test de continuité électrique de la board.
     
-	// if (!LoRa.begin(GSE_DOWNLINK_FREQUENCY)) Serial.println("Starting LoRa failed!");
-
-	// // Set LoRa parameters
-	// LoRa.setTxPower(GSE_DOWNLINK_POWER);
-	// LoRa.setSpreadingFactor(GSE_DOWNLINK_SF);
-	// LoRa.setSignalBandwidth(GSE_DOWNLINK_BW);
-	// LoRa.setCodingRate4(GSE_DOWNLINK_CR);
-	// LoRa.setPreambleLength(GSE_DOWNLINK_PREAMBLE_LEN);
-
-	// #if (GSE_DOWNLINK_CRC)
-	// LoRa.enableCrc(); // not necessary to work with miaou, even if miaou enbale it...:-|
-	// #else
-	// LoRa.disableCrc();
-	// #endif
 
 
-	// // ! \\ Ne fonctionne que en disableInvertIQ
-	// #if (GSE_DOWNLINK_INVERSE_IQ)	
-	// 	LoRa.enableInvertIQ();
-	// #else
-	// 	LoRa.disableInvertIQ();
-	// #endif
 }
 
 void loop() {
-
-    computer.update(millis());
-    // Serial.println("In the loop");
-    // delay(1000);
-    // uint8_t  packetToSend[4] = {0, 1, 2, 3};
-    // if(LoRa.beginPacket()) {
-    //     Serial.println("Transmitted a packet");
-	// 	LoRa.write(packetToSend,4);
-	// 	LoRa.endPacket(false);
-    // } else {
-    //     Serial.println("Could not transmit");
-    // }
+ 	computer.update(millis());
 
 }

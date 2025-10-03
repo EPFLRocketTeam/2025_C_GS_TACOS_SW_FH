@@ -13,6 +13,8 @@ private:
     bool m_lox_disconnecetd = false;
     bool m_ambient_disconnecetd = false;
     bool m_isolation_disconnecetd = false;
+    bool m_servo1_open = false;
+    bool m_servo2_open = false;
 
     pte7300_sample_t m_gp1{};
     pte7300_sample_t m_gp2{};
@@ -35,7 +37,7 @@ public:
     void init();
     void update(time_t current);
     void soft_reset();
-
+    void force_all_solenoids_open();
 };
 
 #endif // TACOSCOMPUTER_H

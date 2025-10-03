@@ -11,21 +11,21 @@ PTE7300 GP4{{&MUX_1, 3}};
 //PTE7300 SENSATA_5{{&MUX_2, 0}};
 //PTE7300 SENSATA_6{{&MUX_2, 1}};
 
-ToggleActuator GQN1{{toggle_type::TOGGLE_TYPE_NC, 0}}; //out 11
-ToggleActuator GQN2{{toggle_type::TOGGLE_TYPE_NC, 1}}; //out 12
-ToggleActuator GQN3{{toggle_type::TOGGLE_TYPE_NC, 2}}; //out 13
-ToggleActuator GQN4{{toggle_type::TOGGLE_TYPE_NC, 3}}; //out 14
-ToggleActuator GQN5{{toggle_type::TOGGLE_TYPE_NC, 4}}; //out 15
-ToggleActuator GQN6{{toggle_type::TOGGLE_TYPE_NC, 5}}; //out 16
+ToggleActuator GQN1{{toggle_type::TOGGLE_TYPE_NC, 25}}; //out 11
+ToggleActuator GQN2{{toggle_type::TOGGLE_TYPE_NC, 24}}; //out 12
+ToggleActuator GQN3{{toggle_type::TOGGLE_TYPE_NC, 28}}; //out 13
+ToggleActuator GQN4{{toggle_type::TOGGLE_TYPE_NC, 10}}; //out 14
+ToggleActuator GQN5{{toggle_type::TOGGLE_TYPE_NC, 9}}; //out 15
+ToggleActuator GQN6{{toggle_type::TOGGLE_TYPE_NC, 8}}; //out 16
 
-ToggleActuator GPN{{toggle_type::TOGGLE_TYPE_NC, 6}}; //out 21
-ToggleActuator GPA{{toggle_type::TOGGLE_TYPE_NC, 7}}; //out 22
-ToggleActuator GVN{{toggle_type::TOGGLE_TYPE_NC, 8}}; //out 23
-ToggleActuator GFE{{toggle_type::TOGGLE_TYPE_NC, 9}}; //out 24
-ToggleActuator GFO{{toggle_type::TOGGLE_TYPE_NC, 24}}; //out 25
-ToggleActuator GDO{{toggle_type::TOGGLE_TYPE_NC, 10}}; //out 26
+ToggleActuator GPN{{toggle_type::TOGGLE_TYPE_NC, 3}}; //out 21
+ToggleActuator GPA{{toggle_type::TOGGLE_TYPE_NC, 4}}; //out 22
+ToggleActuator GVN{{toggle_type::TOGGLE_TYPE_NC, 5}}; //out 23
+ToggleActuator GFE{{toggle_type::TOGGLE_TYPE_NC, 2}}; //out 24
+ToggleActuator GFO{{toggle_type::TOGGLE_TYPE_NC, 0}}; //out 25
+ToggleActuator GDO{{toggle_type::TOGGLE_TYPE_NC, 1}}; //out 26
 //ToggleActuator PC{{toggle_type::TOGGLE_TYPE_NC, 20}}; //out 27
-ToggleActuator PUMP{{toggle_type::TOGGLE_TYPE_NC, 28}}; //out 28
+ToggleActuator PUMP{{toggle_type::TOGGLE_TYPE_NC, 6}}; //out 28
 // ToggleActuator PR{{toggle_type::TOGGLE_TYPE_NC, 0}};
 //ToggleActuator TOGGLE_28{{toggle_type::TOGGLE_TYPE_NC, 0}};
 
@@ -74,6 +74,29 @@ bool apply_solenoid_command(ToggleActuator& actuator, uint8_t order_value, const
     return true;
 }
 
+bool apply_servo_command(Servo& servo, bool& is_open, uint8_t order_value, const char* label) {
+    if (order_value == ACTIVE) {
+        is_open = true;
+    } else if (order_value == INACTIVE) {
+        is_open = false;
+    } else {
+        is_open = !is_open;
+        Serial.print("[CMD][WARN] Non-explicit order value 0x");
+        Serial.print(order_value, HEX);
+        Serial.print(" for ");
+        Serial.print(label);
+        Serial.println(" -> toggling servo");
+    }
+
+    servo.write(is_open ? SERVO_OPEN : SERVO_CLOSE);
+
+    Serial.print("[CMD] ");
+    Serial.print(label);
+    Serial.print(" -> ");
+    Serial.println(is_open ? "OPEN" : "CLOSE");
+    return true;
+}
+
 }
 
 
@@ -84,6 +107,10 @@ void TACOSComputer::init() {
 
     SERVO_1.attach(SERVO_1_PIN);
     SERVO_2.attach(SERVO_2_PIN);
+    SERVO_1.write(SERVO_CLOSE);
+    SERVO_2.write(SERVO_CLOSE);
+    m_servo1_open = false;
+    m_servo2_open = false;
 
     GP1.init();
     GP2.init();
@@ -209,13 +236,11 @@ void TACOSComputer::process_telecom_command(const gse_uplink_t& packet) {
         break;
     }    
     case CMD_ID::GSE_CMD_SERVO_1: {
-        SERVO_1.write(SERVO_OPEN);
-        async_schedule_close(SERVO_1, millis());
+        apply_servo_command(SERVO_1, m_servo1_open, packet.order_value, "SERVO_1");
         break;
     }    
     case CMD_ID::GSE_CMD_SERVO_2: {
-        SERVO_2.write(SERVO_OPEN);
-    async_schedule_close(SERVO_2, millis());
+        apply_servo_command(SERVO_2, m_servo2_open, packet.order_value, "SERVO_2");
         break;
     }    
 
@@ -331,7 +356,29 @@ void TACOSComputer::soft_reset() {
     GPA.soft_reset();
     GVN.soft_reset();
     GFO.soft_reset();
+    SERVO_1.write(SERVO_CLOSE);
+    SERVO_2.write(SERVO_CLOSE);
+    m_servo1_open = false;
+    m_servo2_open = false;
     GDO.soft_reset();
     // PC.soft_reset();
     
+}
+
+void TACOSComputer::force_all_solenoids_open() {
+    GQN1.set_position(TOGGLE_POSITION_OPEN);
+    GQN2.set_position(TOGGLE_POSITION_OPEN);
+    GQN3.set_position(TOGGLE_POSITION_OPEN);
+    GQN4.set_position(TOGGLE_POSITION_OPEN);
+    GQN5.set_position(TOGGLE_POSITION_OPEN);
+    GQN6.set_position(TOGGLE_POSITION_OPEN);
+
+    GPN.set_position(TOGGLE_POSITION_OPEN);
+    GPA.set_position(TOGGLE_POSITION_OPEN);
+    GVN.set_position(TOGGLE_POSITION_OPEN);
+    GFE.set_position(TOGGLE_POSITION_OPEN);
+    GFO.set_position(TOGGLE_POSITION_OPEN);
+    GDO.set_position(TOGGLE_POSITION_OPEN);
+
+    PUMP.set_position(TOGGLE_POSITION_OPEN);
 }
