@@ -1,15 +1,17 @@
 #include "TACOSComputer.h"
 #include <Servo.h>
 
-I2CMux MUX_1{{&Wire1, MUX_ADDR, MUX_nRST}};
-I2CMux MUX_2{{&Wire2, MUX_ADDR, MUX_nRST}};
+I2CMux MUX_1{{&Wire, MUX_ADDR, MUX_nRST}};
+I2CMux MUX_2{{&Wire1, MUX_ADDR, MUX_nRST}};
 
-PTE7300 GP1{{&MUX_1, 0}};
-PTE7300 GP2{{&MUX_1, 1}};
-PTE7300 GP3{{&MUX_1, 2}};
-PTE7300 GP4{{&MUX_1, 3}};
-//PTE7300 SENSATA_5{{&MUX_2, 0}};
-//PTE7300 SENSATA_6{{&MUX_2, 1}};
+
+//HOTMST FIX
+PTE7300 GP1{{&MUX_2, 2}};
+PTE7300 GP2{{&MUX_2, 1}};
+PTE7300 GP3{{&MUX_1, 0}};
+PTE7300 GP4{{&MUX_1, 0}};
+PTE7300 GP5{{&MUX_1, 0}};
+PTE7300 GP6{{&MUX_1, 0}};
 
 ToggleActuator GQN1{{toggle_type::TOGGLE_TYPE_NC, 25}}; //out 11
 ToggleActuator GQN2{{toggle_type::TOGGLE_TYPE_NC, 24}}; //out 12
@@ -99,23 +101,28 @@ bool apply_servo_command(Servo& servo, bool& is_open, uint8_t order_value, const
 
 }
 
-
-
 void TACOSComputer::init() {
     
     m_telecom.init();
 
     SERVO_1.attach(SERVO_1_PIN);
     SERVO_2.attach(SERVO_2_PIN);
+    
     SERVO_1.write(SERVO_CLOSE);
     SERVO_2.write(SERVO_CLOSE);
+
     m_servo1_open = false;
     m_servo2_open = false;
+
+    MUX_1.init();
+    MUX_2.init();
 
     GP1.init();
     GP2.init();
     GP3.init();
     GP4.init();
+    GP5.init();
+    GP6.init();
 
     GQN1.init();
     GQN2.init();
@@ -148,8 +155,6 @@ void TACOSComputer::check_pte7300_sample(pte7300_reading_t reading, pte7300_samp
     reg.temperature = reading.temperature_valid ? reading.sample.temperature : reg.temperature;
 }
 
-
-
 void async_schedule_close(Servo& servo, time_t current, int delay_ms = SERVO_DELAY, int close_pos = SERVO_CLOSE) {
     // Find an empty slot in the task array
     for (int i = 0; i < MAX_SCHEDULED_TASKS; i++) {
@@ -173,7 +178,6 @@ void TACOSComputer::process_scheduled_tasks(time_t current) {
         }
     }
 }
-
 
 void TACOSComputer::process_telecom_command(const gse_uplink_t& packet) {
     switch (packet.order_id)
@@ -265,8 +269,7 @@ gse_downlink_t TACOSComputer::build_downlink() {
     packet.GP2 = m_gp2.pressure;  // LOX pressure in the deware
     packet.GP3 = m_gp3.pressure;  // Pressure in the low-pressure side of the gas booster
     packet.GP4 = m_gp4.pressure;  // Pressure before the pneumatic valve
-    packet.GP5 = 0.0f;            // Pressure in the ethanol filling line (not available, set to 0)
-    
+
     // Add toggle states - each field is a separate uint8_t per protocol
     // Map physical valves to protocol fields
     packet.GQN_NC1 = GQN1.get_current_position(); // Nitrogen and Ethanol disconnect actuation
@@ -312,9 +315,14 @@ void TACOSComputer::update(time_t current) {
     // Check for new sensor readings and update internal state
     #ifdef SENSORS_POLLING_RATE_MS
     if (current - m_last_sensors_polling > SENSORS_POLLING_RATE_MS) {
-        pte7300_reading_t reading;
-
         //ajouter la fonction de lecture des capteurs
+        check_pte7300_sample(GP1.sample(), m_gp1);
+        check_pte7300_sample(GP2.sample(), m_gp2);
+        /*check_pte7300_sample(GP3.sample(), m_gp3);
+        check_pte7300_sample(GP4.sample(), m_gp4);
+        check_pte7300_sample(GP5.sample(), m_gp5);
+        check_pte7300_sample(GP6.sample(), m_gp6);*/
+
         // Check system status
         check_status();
         
@@ -356,10 +364,13 @@ void TACOSComputer::soft_reset() {
     GPA.soft_reset();
     GVN.soft_reset();
     GFO.soft_reset();
+    
     SERVO_1.write(SERVO_CLOSE);
     SERVO_2.write(SERVO_CLOSE);
+
     m_servo1_open = false;
     m_servo2_open = false;
+
     GDO.soft_reset();
     // PC.soft_reset();
     

@@ -12,11 +12,6 @@ void setup() {
     Serial.begin(115200);
     Serial.println("Starting");
     computer.init();
-
-	//computer.force_all_solenoids_open(); // Pour test de continuité électrique de la board.
-    
-
-
 }
 
 void loop() {

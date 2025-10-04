@@ -20,8 +20,8 @@ private:
     pte7300_sample_t m_gp2{};
     pte7300_sample_t m_gp3{};
     pte7300_sample_t m_gp4{};
-    // pte7300_sample_t m_sensata_5{};
-    // pte7300_sample_t m_sensata_6{};
+    pte7300_sample_t m_gp5{};
+    pte7300_sample_t m_gp6{};
     time_t m_last_sensors_polling;
 
     Telecom m_telecom;
